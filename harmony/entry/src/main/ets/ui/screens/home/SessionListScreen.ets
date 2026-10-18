@@ -47,6 +47,7 @@ export struct SessionListScreen {
   @State showDevices: boolean = false;
   @State groups: SessionGroup[] = [];
   @State markingRead: boolean = false;
+  @State refreshing: boolean = false;
   @State announcementMarkdown: string = '';
   @State announcementAt: string = '';
   @State announcementDismissed: boolean = false;
@@ -517,6 +518,7 @@ export struct SessionListScreen {
         .width('100%')
         .justifyContent(FlexAlign.Center)
       } else {
+        Refresh({ refreshing: this.refreshing }) {
         List({ space: 8 }) {
           ForEach(this.groups, (group: SessionGroup) => {
             ListItemGroup({ header: this.groupHeader(group.name) }) {
@@ -607,6 +609,14 @@ export struct SessionListScreen {
         .padding({ left: 16, right: 16, bottom: 16 })
         .onReachEnd(() => {
           this.loadMore();
+        })
+        }
+        .onRefreshing(() => {
+          this.refreshing = true;
+          this.reload();
+          setTimeout(() => {
+            this.refreshing = false;
+          }, 800);
         })
       }
       }
