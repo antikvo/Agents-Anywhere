@@ -19,6 +19,14 @@
   "targets": [
     {
       "name": "default"
+    },
+    {
+      "name": "ohosTest",
+      "source": {
+        "sourceRoots": [
+          "./src/ohosTest"
+        ]
+      }
     }
   ]
 }

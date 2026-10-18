@@ -140,6 +140,22 @@ curl -s "$BASE/connectors/$CID/runtimes/$RID/catalogs/permission" -H "Authorizat
 
 已知环境限制：本机 Codex 默认模型 `gpt-6.1-sol` 在 ChatGPT 账号下不可用；改用 catalog selection（如 `sel_model_*`）可以成功创建 thread/turn，但本轮测试中 turn 长时间停留在 running、无 assistant 输出，因此**审批成功路径未能完成验证**。
 
+## 单元测试
+
+`entry/src/ohosTest` 使用 `@ohos/hypium`，覆盖纯函数（版本比较、URL 规范化、VT 解析、Markdown）：
+
+```bash
+cd harmony
+ohpm install
+hvigorw --mode module -p module=entry@ohosTest assembleHap --no-daemon
+# 安装应用 HAP 与测试 HAP 后在设备/模拟器执行
+hdc install -r entry/build/default/outputs/default/entry-default-unsigned.hap
+hdc install -r entry/build/default/outputs/ohosTest/entry-ohosTest-unsigned.hap
+hdc shell aa test -b com.agentsanywhere.harmony -m entry_test -s unittest OpenHarmonyTestRunner -s timeout 60000
+```
+
+当前 17 个用例全部通过；新增纯逻辑时优先补对应测试。
+
 ## 验证
 
 ```bash
