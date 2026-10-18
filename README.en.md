@@ -47,6 +47,7 @@ See the [download page](https://www.agents-anywhere.com/en/download) for platfor
 - Windows: x64 desktop workbench with a managed Connector; the current installer is not code signed.
 - Android: Android 8.0 or later.
 - iOS / iPadOS: download from the App Store, or install the beta through TestFlight; beta availability is shown on the invitation page.
+- HarmonyOS: HarmonyOS NEXT 6.0 or later; build from source in [harmony/](harmony/README.md) with DevEco Studio. No installer and no app-market release yet.
 - Linux / headless: run the Connector on the work machine and control it from another client.
 
 The macOS, Windows and Android files are **Agents Anywhere** installers hosted in the ModelScope repository `t4wefan/deepseek-harness-desktop`; the same files are also attached to the [v2.0.3 GitHub Release](https://github.com/anywhere-labs/Agents-Anywhere/releases/tag/v2.0.3). Historical 0.1.x GitHub Releases are not the 2.0 download channel. In-app update addresses in the current released clients are still placeholders; download manually using the links above.
@@ -91,6 +92,12 @@ A runtime is the component that runs or connects an agent on your work machine. 
 Check progress and reply from your phone, open the workspace on your tablet, then continue at your computer. Sign in to the same service and account to access your devices and sessions from different clients.
 
 **Your phone controls the work; the connected machine runs it.** Keep that machine powered on and online, with its Connector and runtime running. The iPad capture shows an agent waiting for the user’s input. Screenshots retain their original interface language.
+
+### HarmonyOS client (in development)
+
+[`harmony/`](harmony/README.md) is a pure-native ArkTS/ArkUI client for HarmonyOS NEXT. It uses the same `/api/v2` contract as the Android and iOS clients and covers sign-in, sessions and timelines, approvals and input requests, file browsing and terminals.
+
+The client is still in development: it can only be built from source today, has no installer and is not published to an app market. Some features are still missing, and it is not covered by the current CI checks. See [harmony/README.md](harmony/README.md) for build and local setup steps, and [harmony/TASKS.md](harmony/TASKS.md) for feature coverage and verification status.
 
 ## First use
 
@@ -142,7 +149,7 @@ Development uses **Python 3.12+ / uv / Node.js 22 / Corepack + Yarn**. Start wit
 | Architecture and API | [Server architecture](docs/server-architecture.md) · [API documentation](docs/api/README.md) |
 | Agent integrations and local execution | [Connector](connector/README.md) · [Runtime protocol](docs/runtime-protocol/README.md) |
 | Web and desktop clients | [Web source](web-next/) · [Desktop Workbench](desktop-workbench/README.md) |
-| Native mobile clients | [Android](android/README.md) · [iOS source](ios/) |
+| Native mobile clients | [Android](android/README.md) · [iOS source](ios/) · [HarmonyOS source](harmony/README.md) |
 | DSH integration | [DSH Bridge Next](dsh-bridge-next/README.md) |
 | More documentation | [Documentation index](docs/README.md) · [Protocol contracts](contracts/) |
 

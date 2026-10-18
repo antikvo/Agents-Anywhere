@@ -13,7 +13,7 @@
 | Desktop 开发、打包、签名 | [Desktop Workbench](../desktop-workbench/README.md) |
 | 接入无图形界面的机器 | [Connector](../connector/README.md) |
 | Android 构建 | [Android](../android/README.md) |
-| 鸿蒙客户端选型与落地计划 | [HarmonyOS 客户端方案](harmony-client-plan.md) |
+| HarmonyOS 客户端构建与联调 | [HarmonyOS 客户端](../harmony/README.md)；选型与计划见 [方案](harmony-client-plan.md) |
 | 架构和 API | [Server 架构](server-architecture.md)、[API](api/README.md) |
 | DSH 大历史内存 | [实现与验证](dsh-snapshot-uploads.md) |
 | DSH 慢速历史上传 | [实现与验证](dsh-slow-upload.md)、[2.1.0 配套说明（未发布）](releases/2.1.0.md) |

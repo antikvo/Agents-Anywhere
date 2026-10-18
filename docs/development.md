@@ -4,7 +4,7 @@
 
 `main` 是 v2 主线，新功能从最新 `main` 创建分支，分支名为 `<type>/<domain>/<topic>`（type 如 `feat`、`fix`、`docs`；domain 缩写为 `fe`、`be`、`con`、`dsk`、`apk`、`ios`、`dsh`、`docs`，多个 domain 用 `+` 连接），如 `feat/con+be/<topic>`。`v2` 保留用于发布过渡，不再把旧 `main` 的 API 和数据库假定套用到当前主线。历史资料见[升级指南](upgrading.md)。
 
-使用 Python 3.12+、uv、Node.js 22、Corepack/Yarn。Docker 源码启动器需要 Docker Compose；Android 需要 JDK 17 与 Android SDK，iOS 需要 Xcode。各子项目独立安装依赖，不在仓库根目录运行一个假设存在的总构建命令。
+使用 Python 3.12+、uv、Node.js 22、Corepack/Yarn。Docker 源码启动器需要 Docker Compose；Android 需要 JDK 17 与 Android SDK，iOS 需要 Xcode，HarmonyOS 需要 DevEco Studio 与 HarmonyOS SDK（API 26）。各子项目独立安装依赖，不在仓库根目录运行一个假设存在的总构建命令。
 
 ## Web 与 Server 本地联调
 
@@ -41,6 +41,17 @@ yarn dev
 ```
 
 此启动器使用 Server `8000`、Web `5174`（Desktop 开发模式的登录页）和 Desktop `5184`，会释放这三个应用端口的既有监听者，然后像 `local-up.sh` 一样在前台运行 Server、Web 和 Desktop，并带前缀输出日志（同时写入 `.local-dev/logs/`）。按 Ctrl-C 停止本次启动的服务和数据库容器；`down` 用于停止另一个终端里仍在运行的启动器。更多环境变量与生命周期见 [Desktop README](../desktop-workbench/README.md)。
+
+## HarmonyOS
+
+HarmonyOS NEXT 客户端位于 `harmony/`，使用 ArkTS/ArkUI 与 hvigor。当前不在 CI 中，需要在本地用 DevEco Studio（或命令行 hvigor）构建：
+
+```bash
+cd harmony
+hvigorw assembleHap --mode module -p module=entry@default -p product=default --no-daemon
+```
+
+SDK 路径、模拟器安装、深链与本地联调步骤见 [HarmonyOS README](../harmony/README.md)。该客户端仍在开发中，功能覆盖与验证状态见 [TASKS](../harmony/TASKS.md)。
 
 ## Headless 检查
 

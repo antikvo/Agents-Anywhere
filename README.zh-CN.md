@@ -47,6 +47,7 @@
 - Windows：x64 桌面工作台，含本机 Connector；当前安装包未做代码签名。
 - Android：Android 8.0 及以上。
 - iOS / iPadOS：在 App Store 下载安装；也可以通过 TestFlight 安装测试版，以邀请页显示的可用状态为准。
+- HarmonyOS：HarmonyOS NEXT 6.0 及以上；当前需用 DevEco Studio 从 [harmony/](harmony/README.md) 源码构建，未提供安装包，也未上架应用市场。
 - Linux / headless：运行 Connector 接入工作设备，通过其他客户端操作。
 
 macOS、Windows 和 Android 的下载文件均为 **Agents Anywhere** 安装包，托管在 ModelScope 的 `t4wefan/deepseek-harness-desktop` 仓库中，同样的文件也发布在 GitHub 的 [v2.0.3 Release](https://github.com/anywhere-labs/Agents-Anywhere/releases/tag/v2.0.3)。历史 GitHub Releases 中的 0.1.x 安装包不作为 2.0 下载入口。当前发布客户端的应用内更新地址仍是占位配置，请通过上面的链接手动下载。
@@ -91,6 +92,12 @@ Runtime 是工作设备上运行和连接 Agent 的组件。模型账号和调�
 用手机查看进展、回复 Agent，在平板上打开工作区，回到电脑后继续处理。同一服务、同一账号下，自己的设备和会话可以从不同客户端访问。
 
 **手机负责控制，工作设备负责执行。** 远程使用时，工作设备需要保持开机、联网，并让 Connector 与对应 Runtime 正常运行。上图 iPad 展示了回复 Agent 输入请求的界面。
+
+### HarmonyOS 客户端（开发中）
+
+[`harmony/`](harmony/README.md) 是 HarmonyOS NEXT 的纯原生 ArkTS/ArkUI 客户端，采用与 Android / iOS 相同的 `/api/v2` 契约，支持登录、会话与时间线、审批与输入请求、文件浏览、终端等能力。
+
+该客户端仍在开发中：目前只能从源码构建，未提供安装包，也未上架应用市场；部分能力尚未完成，也不参与当前的 CI 检查。构建方式与本地联调步骤见 [harmony/README.md](harmony/README.md)，功能覆盖和验证状态见 [harmony/TASKS.md](harmony/TASKS.md)。
 
 ## 首次使用
 
@@ -142,7 +149,7 @@ docker compose -f docker/docker-compose.postgres.yml up --build
 | 整体架构与 API | [Server 架构](docs/server-architecture.md) · [API 文档](docs/api/README.md) |
 | Agent 接入与本机执行 | [Connector](connector/README.md) · [Runtime 协议](docs/runtime-protocol/README.md) |
 | Web 与桌面客户端 | [Web 源码](web-next/) · [Desktop Workbench](desktop-workbench/README.md) |
-| 原生移动客户端 | [Android](android/README.md) · [iOS 源码](ios/) |
+| 原生移动客户端 | [Android](android/README.md) · [iOS 源码](ios/) · [HarmonyOS 源码](harmony/README.md) |
 | DSH 集成 | [DSH Bridge Next](dsh-bridge-next/README.md) |
 | 更多文档 | [文档目录](docs/README.md) · [协议契约](contracts/) |
 
