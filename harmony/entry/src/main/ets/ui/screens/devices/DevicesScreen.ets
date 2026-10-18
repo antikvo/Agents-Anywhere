@@ -1,6 +1,8 @@
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { DevicesController } from '../../../feature/devices/DevicesController';
 import { DeviceItem } from '../../../model/Device';
+import { DevicesApi } from '../../../api/DevicesApi';
+import { DeviceRuntimeItem } from '../../../api/DeviceRuntimeDtos';
 
 /**
  * 设备列表：名称、在线状态、系统与最后在线时间。
@@ -10,6 +12,7 @@ import { DeviceItem } from '../../../model/Device';
 export struct DevicesScreen {
   session: AuthSession | null = null;
   private controller: DevicesController = new DevicesController();
+  private devicesApi: DevicesApi = new DevicesApi();
   @State devices: DeviceItem[] = [];
   @State loading: boolean = true;
   @State errorMessage: string = '';
@@ -23,6 +26,9 @@ export struct DevicesScreen {
   @State renameText: string = '';
   @State confirmDelete: boolean = false;
   @State actionBusy: boolean = false;
+  @State runtimes: DeviceRuntimeItem[] = [];
+  @State runtimesLoading: boolean = false;
+  @State runtimesError: string = '';
 
   aboutToAppear(): void {
     this.load();
@@ -42,6 +48,24 @@ export struct DevicesScreen {
       this.errorMessage = (error as Error).message;
     } finally {
       this.loading = false;
+    }
+  }
+
+  private async loadRuntimes(connectorId: string): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null) {
+      return;
+    }
+    this.runtimesLoading = true;
+    this.runtimesError = '';
+    this.runtimes = [];
+    try {
+      this.runtimes = await this.devicesApi.listRuntimes(session.serverUrl, session.accessToken,
+        connectorId);
+    } catch (error) {
+      this.runtimesError = (error as Error).message;
+    } finally {
+      this.runtimesLoading = false;
     }
   }
 
@@ -199,6 +223,7 @@ export struct DevicesScreen {
                 .backgroundColor('#F7F7F7')
                 .onClick(() => {
                   this.selected = device;
+                  this.loadRuntimes(device.id);
                 })
               }
             }, (device: DeviceItem) => device.id)
@@ -244,11 +269,58 @@ export struct DevicesScreen {
             .fontSize(12)
             .fontColor('#8A8A8A')
             .width('100%')
-          Text('Runtime 配置、工作区与配对需要在线 Connector，后续版本补齐。')
-            .fontSize(12)
-            .fontColor('#8A8A8A')
-            .width('100%')
-            .padding({ top: 4 })
+          Row({ space: 8 }) {
+            Text('运行时')
+              .fontSize(13)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#111111')
+              .layoutWeight(1)
+            Button('刷新')
+              .height(24)
+              .fontSize(10)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                if (this.selected !== null) {
+                  this.loadRuntimes(this.selected.id);
+                }
+              })
+          }
+          .width('100%')
+
+          if (this.runtimesLoading) {
+            Text('加载运行时…')
+              .fontSize(12)
+              .fontColor('#8A8A8A')
+              .width('100%')
+          } else if (this.runtimesError.length > 0) {
+            Text(this.runtimesError)
+              .fontSize(12)
+              .fontColor('#D93026')
+              .width('100%')
+          } else if (this.runtimes.length === 0) {
+            Text('该设备还没有发现运行时；设备离线时只能查看缓存信息。')
+              .fontSize(12)
+              .fontColor('#8A8A8A')
+              .width('100%')
+          } else {
+            ForEach(this.runtimes, (runtime: DeviceRuntimeItem) => {
+              Row({ space: 6 }) {
+                Text(runtime.name.length > 0 ? runtime.name : runtime.typeDisplayName)
+                  .fontSize(12)
+                  .fontColor('#111111')
+                  .layoutWeight(1)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                Text(runtime.status)
+                  .fontSize(10)
+                  .fontColor(runtime.status === 'ready' || runtime.status === 'running' ?
+                    '#1F7A1F' : '#8A8A8A')
+              }
+              .width('100%')
+              .padding({ top: 4, bottom: 4 })
+            }, (runtime: DeviceRuntimeItem) => runtime.runtimeId)
+          }
 
           if (!this.renameMode && !this.confirmDelete) {
             Row({ space: 8 }) {

@@ -2,6 +2,7 @@ import { http } from '@kit.NetworkKit';
 import { apiUrl } from '../core/ServerUrl';
 import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE } from './HttpClient';
 import { ConnectorView, ConnectorsResponse } from './SessionDtos';
+import { DeviceRuntimeItem, DeviceRuntimeListResponse } from './DeviceRuntimeDtos';
 
 export interface ConnectorCreateResponse {
   connector: ConnectorView;
@@ -31,6 +32,13 @@ export class DevicesApi {
 
   constructor(client: HttpClient = new HttpClient()) {
     this.client = client;
+  }
+
+  async listRuntimes(serverUrl: string, token: string, connectorId: string): Promise<DeviceRuntimeItem[]> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/runtimes`;
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), { token: token });
+    const response: DeviceRuntimeListResponse = JSON.parse(text) as DeviceRuntimeListResponse;
+    return response.runtimes;
   }
 
   async listConnectors(serverUrl: string, token: string): Promise<ConnectorsResponse> {
