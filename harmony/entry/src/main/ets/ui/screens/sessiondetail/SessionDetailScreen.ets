@@ -19,6 +19,7 @@ import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessa
 import { FileChange } from '../../../model/Timeline';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { SessionDraftStore } from '../../../platform/SessionDraftStore';
+import { RuntimeCommand } from '../../../api/CommandsApi';
 import { promptAction } from '@kit.ArkUI';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { fileIo } from '@kit.CoreFileKit';
@@ -42,6 +43,8 @@ export struct SessionDetailScreen {
   @State shareUrl: string = '';
   @State shareBusy: boolean = false;
   @State shareScopeLabel: string = '会话';
+  @State commands: RuntimeCommand[] = [];
+  @State commandsLoaded: boolean = false;
   @State statusText: string = '';
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
@@ -215,10 +218,51 @@ export struct SessionDetailScreen {
         }
       }
       this.controller.connect();
+      this.loadCommands();
     } catch (error) {
       this.errorMessage = (error as Error).message;
     } finally {
       this.loading = false;
+    }
+  }
+
+  private async loadCommands(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null) {
+      return;
+    }
+    try {
+      this.commands = await this.controller.commands(session);
+    } catch (error) {
+      this.commands = [];
+    } finally {
+      this.commandsLoaded = true;
+    }
+  }
+
+  private commandSuggestions(): RuntimeCommand[] {
+    const text: string = this.draft.trim();
+    if (!text.startsWith('/') || text.indexOf(' ') >= 0) {
+      return [];
+    }
+    const query: string = text.substring(1).toLowerCase();
+    const matches: RuntimeCommand[] = [];
+    this.commands.forEach((command: RuntimeCommand) => {
+      if (!command.enabled) {
+        return;
+      }
+      const title: string = command.title.toLowerCase();
+      if (query.length === 0 || title.startsWith(query)) {
+        matches.push(command);
+      }
+    });
+    return matches.slice(0, 5);
+  }
+
+  private applyCommand(command: RuntimeCommand): void {
+    this.draft = `/${command.title} `;
+    if (this.initial !== null) {
+      this.drafts.save(this.initial.id, this.draft);
     }
   }
 
@@ -940,6 +984,41 @@ export struct SessionDetailScreen {
           .onClick(() => {
             this.pickAttachment();
           })
+        if (this.draft.trim().startsWith('/')) {
+          Column({ space: 4 }) {
+            if (this.commandSuggestions().length > 0) {
+              ForEach(this.commandSuggestions(), (command: RuntimeCommand) => {
+                Row({ space: 8 }) {
+                  Text(`/${command.title}`)
+                    .fontSize(12)
+                    .fontColor('#111111')
+                  Text(command.description === undefined || command.description === null ?
+                    '' : command.description)
+                    .fontSize(10)
+                    .fontColor('#8A8A8A')
+                    .layoutWeight(1)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                }
+                .width('100%')
+                .padding({ top: 6, bottom: 6, left: 8, right: 8 })
+                .borderRadius(6)
+                .backgroundColor('#F7F7F7')
+                .onClick(() => {
+                  this.applyCommand(command);
+                })
+              }, (command: RuntimeCommand) => command.id)
+            } else if (this.commandsLoaded) {
+              Text('该 Runtime 暂不提供命令建议')
+                .fontSize(10)
+                .fontColor('#8A8A8A')
+                .width('100%')
+                .padding({ left: 8, top: 4, bottom: 4 })
+            }
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, bottom: 4 })
+        }
         TextArea({ placeholder: this.takeover ? '发送消息…' : '先点上方「接管」', text: this.draft })
           .layoutWeight(1)
           .height(42)

@@ -6,6 +6,7 @@ import { NoticeDto, RuntimeStateDto, SessionSnapshotResponse, TimelineItemDto } 
 import { SessionView } from '../../api/SessionDtos';
 import { AttachmentsApi, UploadedAttachment } from '../../api/AttachmentsApi';
 import { SessionsApi, ShareCreateResponse } from '../../api/SessionsApi';
+import { CommandsApi, RuntimeCommand } from '../../api/CommandsApi';
 import { AuthSession } from '../auth/AuthSessionStore';
 import { TimelineRow, toTimelineRows } from '../../model/Timeline';
 
@@ -71,6 +72,9 @@ export class SessionDetailController {
   private loadingOlder: boolean = false;
   private currentSession: AuthSession | null = null;
   private currentSessionId: string = '';
+  private connectorId: string = '';
+  private runtimeId: string = '';
+  private readonly commandsApi: CommandsApi = new CommandsApi();
 
   onRows: (rows: TimelineRow[]) => void = () => {
   };
@@ -105,6 +109,9 @@ export class SessionDetailController {
     snapshot.timeline.items.forEach((item: TimelineItemDto) => {
       this.items.set(item.id, item);
     });
+    this.connectorId = snapshot.session.connectorId;
+    const snapshotRuntimeId: string | null | undefined = snapshot.session.runtimeId;
+    this.runtimeId = snapshotRuntimeId === undefined || snapshotRuntimeId === null ? '' : snapshotRuntimeId;
     this.cursor = snapshot.eventCursor.length > 0 ? snapshot.eventCursor : 'seq:0';
     this.notices.clear();
     const snapshotNotices: NoticeDto[] | null | undefined = snapshot.notices;
@@ -143,6 +150,11 @@ export class SessionDetailController {
     const share: ShareCreateResponse = await this.sessionsApi.createMessageShare(session.serverUrl,
       session.accessToken, sessionId, itemIds);
     return share.shareUrl;
+  }
+
+  async commands(session: AuthSession): Promise<RuntimeCommand[]> {
+    return await this.commandsApi.list(session.serverUrl, session.accessToken, this.connectorId,
+      this.runtimeId);
   }
 
   async connect(): Promise<void> {
