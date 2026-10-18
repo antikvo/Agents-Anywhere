@@ -1,5 +1,10 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { toTimelineRows, TimelineRowKind } from '../../../main/ets/model/Timeline';
+import {
+  replaceTimelineItems,
+  TimelineRowKind,
+  toTimelineRows,
+  upsertTimelineItem
+} from '../../../main/ets/model/Timeline';
 import { TimelineItemDto } from '../../../main/ets/api/ProtocolDtos';
 
 interface TextContent {
@@ -48,6 +53,28 @@ function item(id: string, type: string, role: string, content: Object): Timeline
 }
 
 export default function timelineTest() {
+  describe('timeline merge', () => {
+    it('upsert adds and replaces by id', 0, () => {
+      const items: Map<string, TimelineItemDto> = new Map<string, TimelineItemDto>();
+      const first: TextContent = { kind: 'markdown', text: 'one' };
+      const updated: TextContent = { kind: 'markdown', text: 'two' };
+      upsertTimelineItem(items, item('i1', 'message', 'user', first));
+      expect(items.size).assertEqual(1);
+      upsertTimelineItem(items, item('i1', 'message', 'user', updated));
+      expect(items.size).assertEqual(1);
+      const rows = toTimelineRows(Array.from(items.values()));
+      expect(rows[0].body).assertEqual('two');
+    });
+    it('replace clears stale items', 0, () => {
+      const items: Map<string, TimelineItemDto> = new Map<string, TimelineItemDto>();
+      const one: TextContent = { kind: 'markdown', text: 'old' };
+      upsertTimelineItem(items, item('old', 'message', 'user', one));
+      const two: TextContent = { kind: 'markdown', text: 'new' };
+      replaceTimelineItems(items, [item('new', 'message', 'user', two)]);
+      expect(items.size).assertEqual(1);
+      expect(items.has('old')).assertFalse();
+    });
+  });
   describe('toTimelineRows', () => {
     it('maps a user message', 0, () => {
       const content: TextContent = { kind: 'markdown', text: 'hi' };

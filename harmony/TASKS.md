@@ -139,7 +139,7 @@
 | 任务 | 蓝本 | 落位 | 状态 |
 | --- | --- | --- | --- |
 | 协议类型生成 + `--check` | `web-next/scripts/generate-protocol-types.mjs` | `harmony/scripts/` | ⬜ |
-| 单元测试：URL 规范化、VT 解析、Markdown、reducer | Android 单测、iOS `Tests/ClientCoreTests` | `entry/src/ohosTest/` | ✅ 26 个用例（版本比较 / URL 规范化 / VT 解析 / Markdown / 时间线映射 / 会话状态与分组）已在模拟器跑通；流式合并 reducer 未单测 |
+| 单元测试：URL 规范化、VT 解析、Markdown、reducer | Android 单测、iOS `Tests/ClientCoreTests` | `entry/src/ohosTest/` | ✅ 28 个用例（版本比较 / URL 规范化 / VT 解析 / Markdown / 时间线映射 / 事件合并 / 会话状态与分组）已在模拟器跑通 |
 | 构建 CI job（不阻塞其他端） | `.github/workflows/ci.yml` | `harmony/scripts/verify.sh` | ⬜ 本地校验脚本已提供（构建主/测试 HAP，可选跑单测）；GitHub runner 无 DevEco SDK，未接 CI |
 | 模拟器回归清单 | — | `harmony/README.md` | 🔄 核心链路已在模拟器逐项验证；清单见 README「验证」 |
 | 真机回归（安装、扫码、推送、后台、终端） | — | `harmony/README.md` 的「真机回归清单」 | ⬜ 清单已写好，由项目所有者执行 |

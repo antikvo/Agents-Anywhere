@@ -209,6 +209,24 @@ function toolTitle(content: Object): string {
   return '工具调用';
 }
 
+/**
+ * 实时事件合并：按 id upsert（item_created / item_updated）。
+ */
+export function upsertTimelineItem(items: Map<string, TimelineItemDto>, item: TimelineItemDto): void {
+  items.set(item.id, item);
+}
+
+/**
+ * 快照全量替换（timeline.snapshot / 重新订阅）。
+ */
+export function replaceTimelineItems(items: Map<string, TimelineItemDto>,
+  list: TimelineItemDto[]): void {
+  items.clear();
+  list.forEach((item: TimelineItemDto) => {
+    items.set(item.id, item);
+  });
+}
+
 export function toTimelineRows(items: TimelineItemDto[]): TimelineRow[] {
   const sorted: TimelineItemDto[] = items.slice();
   sorted.sort((left: TimelineItemDto, right: TimelineItemDto) => left.orderSeq - right.orderSeq);

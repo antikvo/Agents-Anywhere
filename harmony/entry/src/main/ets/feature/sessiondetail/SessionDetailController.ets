@@ -8,7 +8,7 @@ import { AttachmentsApi, UploadedAttachment } from '../../api/AttachmentsApi';
 import { SessionsApi, ShareCreateResponse } from '../../api/SessionsApi';
 import { CommandsApi, RuntimeCommand } from '../../api/CommandsApi';
 import { AuthSession } from '../auth/AuthSessionStore';
-import { TimelineRow, toTimelineRows } from '../../model/Timeline';
+import { replaceTimelineItems, TimelineRow, toTimelineRows, upsertTimelineItem } from '../../model/Timeline';
 
 export interface SessionDetailResult {
   session: SessionView;
@@ -106,10 +106,7 @@ export class SessionDetailController {
     this.currentSessionId = sessionId;
     const snapshot: SessionSnapshotResponse =
       await this.sessionsApi.getSnapshot(session.serverUrl, session.accessToken, sessionId);
-    this.items.clear();
-    snapshot.timeline.items.forEach((item: TimelineItemDto) => {
-      this.items.set(item.id, item);
-    });
+    replaceTimelineItems(this.items, snapshot.timeline.items);
     this.connectorId = snapshot.session.connectorId;
     const cwdValue: string | null | undefined = snapshot.session.cwd;
     this.sessionCwd = cwdValue === undefined || cwdValue === null ? '' : cwdValue;
@@ -228,7 +225,7 @@ export class SessionDetailController {
       if (item === undefined || item === null) {
         return false;
       }
-      this.items.set(item.id, item);
+      upsertTimelineItem(this.items, item);
       return true;
     }
     if (envelope.type === 'timeline.snapshot') {
@@ -237,10 +234,7 @@ export class SessionDetailController {
       if (items === undefined || items === null) {
         return false;
       }
-      this.items.clear();
-      items.forEach((item: TimelineItemDto) => {
-        this.items.set(item.id, item);
-      });
+      replaceTimelineItems(this.items, items);
       return true;
     }
     if (envelope.type === 'session.subscribed') {
@@ -328,10 +322,7 @@ export class SessionDetailController {
     }
     const snapshot: SessionSnapshotResponse = await this.sessionsApi.getSnapshot(session.serverUrl,
       session.accessToken, this.currentSessionId);
-    this.items.clear();
-    snapshot.timeline.items.forEach((item: TimelineItemDto) => {
-      this.items.set(item.id, item);
-    });
+    replaceTimelineItems(this.items, snapshot.timeline.items);
     if (snapshot.eventCursor.length > 0) {
       this.cursor = snapshot.eventCursor;
     }
@@ -399,7 +390,7 @@ export class SessionDetailController {
       const page = await this.sessionsApi.loadTimelineHistory(session.serverUrl,
         session.accessToken, this.currentSessionId, this.oldestOrderSeq, 50);
       page.items.forEach((item: TimelineItemDto) => {
-        this.items.set(item.id, item);
+        upsertTimelineItem(this.items, item);
       });
       this.hasMore = page.hasMore;
       this.oldestOrderSeq = this.minOrderSeq();
