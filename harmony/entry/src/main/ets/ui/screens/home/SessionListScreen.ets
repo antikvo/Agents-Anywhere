@@ -41,6 +41,7 @@ export struct SessionListScreen {
   @State query: string = '';
   @State showDevices: boolean = false;
   @State groups: SessionGroup[] = [];
+  @State markingRead: boolean = false;
 
   onDeepLinkPropChanged(): void {
     this.tryConsumeDeepLink();
@@ -149,6 +150,34 @@ export struct SessionListScreen {
       this.errorMessage = (error as Error).message;
     } finally {
       this.loading = false;
+    }
+  }
+
+  private async markAllRead(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null || this.markingRead) {
+      return;
+    }
+    const unreadIds: string[] = [];
+    this.allSessions.forEach((item: SessionItem) => {
+      if (item.unread) {
+        unreadIds.push(item.id);
+      }
+    });
+    if (unreadIds.length === 0) {
+      return;
+    }
+    this.markingRead = true;
+    this.actionError = '';
+    try {
+      await this.controller.markAllRead(session, unreadIds);
+      this.knownUnread = new Set<string>();
+      this.unreadInitialized = false;
+      await this.reload();
+    } catch (error) {
+      this.actionError = (error as Error).message;
+    } finally {
+      this.markingRead = false;
     }
   }
 
@@ -301,6 +330,17 @@ export struct SessionListScreen {
           .fontColor('#000000')
           .onClick(() => {
             this.reload();
+          })
+
+        Button(this.markingRead ? '已读中' : '全部已读')
+          .height(32)
+          .fontSize(12)
+          .margin({ left: 8 })
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .enabled(!this.markingRead)
+          .onClick(() => {
+            this.markAllRead();
           })
 
         Button('设置')

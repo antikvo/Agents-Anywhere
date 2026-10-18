@@ -36,7 +36,7 @@
 | 搜索：标题 / 工作区 / Runtime / 设备 | `ui/screens/home/HomeLists.kt` | 本地过滤（已加载页范围） | `ui/screens/home/SessionListScreen.ets` | ✅ 已接本地搜索；服务端搜索待确认 |
 | 项目列表与项目操作（新建/改名/归档/删除） | `feature/sessions/WorkspaceProjects.kt`、`ui/screens/home/HomeProjectMenus.kt` | `GET/POST/PATCH/DELETE /projects` | `api/ProjectsApi.ets`、`ui/screens/projects/ProjectsScreen.ets` | ✅ 列表/新建/改名/删除/批量归档会话已接并验证 |
 | 新建会话完整流程（设备→Runtime→工作区→模型/权限→首条消息） | `ui/screens/home/NewSession*.kt`（12 个文件） | `POST /sessions`、`POST /sessions/create-and-start`、runtime catalog | `ui/screens/sessiondetail/NewSessionScreen.ets` | ⬜ |
-| 归档会话页与恢复 | `ui/screens/home/ArchivedSessionsScreen.kt` | `POST /sessions/archive`、`/unarchive` | `ui/screens/home/ArchivedSessionsScreen.ets` | ⬜ |
+| 归档会话页与恢复 | `ui/screens/home/ArchivedSessionsScreen.kt` | `POST /sessions/archive`、`/unarchive` | `ui/screens/home/SessionListScreen.ets`（已归档 Tab） | ✅ 已归档 Tab + 行内「恢复」已接并在线验证；批量归档/取消归档未做 |
 | 归档项目选择器与按项目归档/恢复 | `ui/screens/home/ArchivedProjectPicker.kt` | `POST /projects/{id}/sessions/archive-all` | `api/ProjectsApi.ets`、`ui/screens/projects/ProjectsScreen.ets` | 🔄 按项目归档已接并在线验证；恢复入口（已归档页/项目选择器）未做 |
 | 侧边栏视图模式与项目偏好 | `HomeSidebarViewMode.kt`、`HomeProjectPreferences.kt` | — | `feature/sessions/` | ⬜ |
 | 置顶 / 归档（行内按钮 + 滑动 + 长按菜单） | `HomeSessionActions.kt` | `PATCH /sessions/{id}/meta` | `ui/screens/home/SessionListScreen.ets` | 🔄 行内按钮/滑动/长按菜单与 API 已接；手势操作未在模拟器里复现成功，待真机确认 |
@@ -64,7 +64,7 @@
 | 审批（approval）卡片与处理 | `SessionMessages.kt`、`SessionInteractionCard`（iOS） | Runtime Notice：`GET /runtime/notices`、`POST /notices/{id}/respond`（approve / approve_for_session / reject / cancel） | `ui/screens/sessiondetail/SessionDetailScreen.ets`（noticeCard） | ✅ 卡片、错误通知与 respond 已接；真实 Runtime 错误通知已验证（success 路径待 runtime 可用） |
 | 输入请求（input_request）卡片与回复 | iOS `SessionInteractionCard.swift` | Runtime Notice：`interactionType=input_request`、`submit` | `ui/components/InputRequestCard.ets`、`model/InputRequest.ets` | ✅ uiSchema inputRequest v1 解析、单选/多选/自定义文本与 `answers` 提交；需在线 Runtime 端到端验证 |
 | Runtime 设置：模型、权限、审批策略、配置 | `SessionRuntimeSettingsSheet.kt`、`SessionRuntimeState.kt` | `GET /sessions/{id}/runtime/state`、`/capabilities`、`PATCH /runtime/selections` | 详情页「参数」浮层 | 🔄 状态/选择只读展示与离线降级已接；catalogs 在线时渲染与 selection 修改未做 |
-| 会话 meta：标题、已读、归档 | `SessionsApi.kt` | `GET/PATCH /sessions/{id}/meta`、`POST /sessions/read` | `feature/sessiondetail/`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | ✅ 已读回执 + 详情「更多 → 重命名会话」已接并验证；批量已读未做 |
+| 会话 meta：标题、已读、归档 | `SessionsApi.kt` | `GET/PATCH /sessions/{id}/meta`、`POST /sessions/read` | `feature/sessiondetail/`、`ui/screens/sessiondetail/SessionDetailScreen.ets`、`SessionListScreen.ets` | ✅ 已读回执、详情重命名、列表「全部已读」均已接并验证 |
 | 会话内文件面板 | `SessionAgentFilesScreen.kt` | fs 端点 | `ui/screens/sessiondetail/SessionFilesScreen.ets` | ⬜ |
 | 本轮文件审阅（+A/−D 汇总、逐文件 diff） | `ios/Views/Chat/SessionTurnReviewSheet.swift` | timeline 变更数据 | `ui/screens/sessiondetail/TurnReviewSheet.ets` | ⬜ |
 | 会话详情 sheet（ID、workspace、状态、条目数、待回应交互） | `ios/Views/Chat/SessionDetailsSheet.swift` | 快照字段 | `ui/screens/sessiondetail/SessionDetailsSheet.ets` | ⬜ |

@@ -66,6 +66,13 @@ export class SessionsController {
     await this.sessionsApi.patchMeta(session.serverUrl, session.accessToken, sessionId,
       undefined, undefined, archived);
   }
+
+  async markAllRead(session: AuthSession, sessionIds: string[]): Promise<void> {
+    if (sessionIds.length === 0) {
+      return;
+    }
+    await this.sessionsApi.markRead(session.serverUrl, session.accessToken, sessionIds);
+  }
 }
 
 export function toSessionItems(views: SessionView[], deviceNames: Map<string, string>,
