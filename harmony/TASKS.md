@@ -17,7 +17,7 @@
 | 扫码登录（生成二维码 / 轮询 / 交换） | `android/ui/screens/auth/QrAuthScreens.kt` | `POST /auth/mobile-login/qr`、`/request`、`/status`、`/exchange` | `api/AuthApi.ets`、`feature/auth/AuthController.ets`、`ui/screens/auth/LoginScreen.ets`、`core/DeepLink.ets` | ✅ 深链/手动填入与 Scan Kit 摄像头扫码两条路径均已接；深链路径端到端验证，扫码拉起系统扫码页（模拟器无相机，真机验证取景与识别） |
 | 注册与首位管理员（setup token） | `android/ui/screens/auth/AuthScreens.kt` | `POST /auth/register`、`GET /auth/config` | `ui/screens/auth/RegisterScreen.ets` | ⬜ |
 | OAuth 登录（PKCE + 深链回调） | `android/feature/auth/WebLoginViewModel.kt` | `GET /auth/oauth/start`、`/auth/oauth/callback`、`POST /auth/oauth/finalize` | `platform/OAuth`、`feature/auth/OAuthController.ets` | ⬜ |
-| token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ⬜ 当前与 Android 一致用 preferences 明文；真机前建议接 Asset Store Kit |
+| token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ✅ Asset Store Kit 保存访问令牌：prefs 中 `access_token` 为空，force-stop 后重启仍自动登录（读取自加密存储）；Asset 不可用时回退明文 |
 | 账号资料：头像、昵称、邮箱绑定、改密 | `android/ui/screens/profile/*` | `GET /auth/me`、`PUT /auth/me/profile`、`POST /auth/change-password` | `ui/screens/profile/SettingsScreen.ets` | 🔄 昵称修改/改密已接并验证；服务端 `PUT /auth/me/profile` 只接受 displayName，头像/邮箱绑定无接口（不适用） |
 | 应用内检查更新 | Android `feature/update/AppUpdateViewModel.kt` | `GET /health` 版本比较 | `core/Version.ets`、`ui/screens/profile/SettingsScreen.ets` | 🔄 设置页「检查更新」按服务端版本提示已是最新/可更新并验证；下载与安装流程未做（HarmonyOS 需签名与上架） |
 | 公告与公告门 | `android/ui/screens/announcements/AnnouncementGate.kt` | `GET /announcement` | `api/AnnouncementsApi.ets`、`ui/screens/home/SessionListScreen.ets` | 🔄 首页公告横幅（Markdown + 关闭、刷新同步）已接并验证；强制确认的公告门未做 |

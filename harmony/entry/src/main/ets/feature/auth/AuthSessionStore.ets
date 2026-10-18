@@ -3,6 +3,7 @@ import { AUTH_PREFERENCES_NAME } from '../../core/AppConfig';
 import { AppContextHolder } from '../../core/AppContextHolder';
 import { normalizeServerOrigin } from '../../core/ServerUrl';
 import { PreferencesStore } from '../../platform/PreferencesStore';
+import { SecureTokenStore } from '../../platform/SecureTokenStore';
 
 const KEY_SERVER_URL = 'server_url';
 const KEY_ACCESS_TOKEN = 'access_token';
@@ -28,6 +29,7 @@ export interface AuthSession {
  */
 export class AuthSessionStore {
   private readonly store: PreferencesStore;
+  private readonly secure: SecureTokenStore = new SecureTokenStore();
 
   constructor() {
     this.store = new PreferencesStore(AppContextHolder.require(), AUTH_PREFERENCES_NAME);
@@ -41,7 +43,10 @@ export class AuthSessionStore {
 
   async read(): Promise<AuthSession | null> {
     const serverUrl: string = await this.readServerUrl();
-    const accessToken: string = await this.store.getString(KEY_ACCESS_TOKEN);
+    let accessToken: string = await this.secure.load(serverUrl);
+    if (accessToken.length === 0) {
+      accessToken = await this.store.getString(KEY_ACCESS_TOKEN);
+    }
     if (serverUrl.length === 0 || accessToken.length === 0) {
       return null;
     }
@@ -63,7 +68,12 @@ export class AuthSessionStore {
       throw new Error('Server URL must be an HTTP(S) origin.');
     }
     await this.store.putString(KEY_SERVER_URL, origin);
-    await this.store.putString(KEY_ACCESS_TOKEN, auth.accessToken);
+    const secured: boolean = await this.secure.save(origin, auth.accessToken);
+    if (!secured) {
+      await this.store.putString(KEY_ACCESS_TOKEN, auth.accessToken);
+    } else {
+      await this.store.putString(KEY_ACCESS_TOKEN, '');
+    }
     await this.store.putString(KEY_TOKEN_TYPE, auth.tokenType);
     await this.store.putString(KEY_USER_ID, auth.userId);
     await this.store.putString(KEY_ROLE, auth.role);
@@ -90,6 +100,9 @@ export class AuthSessionStore {
 
   async clear(): Promise<void> {
     const serverUrl: string = await this.readServerUrl();
+    if (serverUrl.length > 0) {
+      await this.secure.clear(serverUrl);
+    }
     await this.store.remove(KEY_ACCESS_TOKEN);
     await this.store.remove(KEY_TOKEN_TYPE);
     await this.store.remove(KEY_USER_ID);
