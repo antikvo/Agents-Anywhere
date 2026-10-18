@@ -96,6 +96,37 @@ export class TerminalBuffer {
     this.scrollOffset = 0;
   }
 
+  /**
+   * 当前可视区域文本（考虑 scrollOffset），用于复制。
+   */
+  visibleText(): string {
+    const lines: string[] = [];
+    const historyCount: number = this.history.length;
+    const offset: number = Math.min(this.scrollOffset, historyCount);
+    for (let r = 0; r < this.rows; r++) {
+      const globalIndex: number = historyCount - offset + r;
+      let cells: TermCell[];
+      if (globalIndex < historyCount) {
+        cells = this.history[globalIndex];
+      } else {
+        const gridIndex: number = globalIndex - historyCount;
+        cells = gridIndex >= 0 && gridIndex < this.rows ? this.grid[gridIndex] : blankRow(this.cols);
+      }
+      let line: string = '';
+      for (let c = 0; c < this.cols; c++) {
+        line += cells[c].ch;
+      }
+      lines.push(line.replace(/\s+$/, ''));
+    }
+    while (lines.length > 0 && lines[lines.length - 1].length === 0) {
+      lines.pop();
+    }
+    while (lines.length > 0 && lines[0].length === 0) {
+      lines.shift();
+    }
+    return lines.join('\n');
+  }
+
   scrollUp(lines: number): void {
     const maxOffset: number = this.history.length;
     this.scrollOffset = Math.min(maxOffset, this.scrollOffset + lines);

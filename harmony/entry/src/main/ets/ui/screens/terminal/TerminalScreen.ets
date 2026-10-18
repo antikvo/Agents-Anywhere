@@ -3,6 +3,8 @@ import { TerminalController } from '../../../feature/terminal/TerminalController
 import { TermSpan, terminalColor } from '../../../model/TerminalBuffer';
 import { TerminalView } from '../../../api/TerminalApi';
 import { BackgroundTask } from '../../../platform/BackgroundTask';
+import { pasteboard } from '@kit.BasicServicesKit';
+import { promptAction } from '@kit.ArkUI';
 
 /**
  * 终端：VT 解析 + 颜色渲染 + 输入/清屏。
@@ -82,6 +84,32 @@ export struct TerminalScreen {
       this.errorMessage = (error as Error).message;
     } finally {
       this.busy = false;
+    }
+  }
+
+  private async copyVisible(): Promise<void> {
+    const text: string = this.controller.buffer.visibleText();
+    if (text.length === 0) {
+      return;
+    }
+    try {
+      const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+      await pasteboard.getSystemPasteboard().setData(data);
+      promptAction.showToast({ message: '已复制当前屏幕' });
+    } catch (error) {
+      promptAction.showToast({ message: '复制失败' });
+    }
+  }
+
+  private async pasteToInput(): Promise<void> {
+    try {
+      const data: pasteboard.PasteData = await pasteboard.getSystemPasteboard().getData();
+      const text: string = data.getPrimaryText();
+      if (text.length > 0) {
+        this.inputLine = this.inputLine + text;
+      }
+    } catch (error) {
+      promptAction.showToast({ message: '系统限制读取剪贴板，请长按输入框粘贴' });
     }
   }
 
@@ -197,24 +225,6 @@ export struct TerminalScreen {
           .onClick(() => {
             this.createTerminal();
           })
-        Button('上翻')
-          .height(26)
-          .fontSize(11)
-          .backgroundColor('#F2F2F2')
-          .fontColor('#111111')
-          .onClick(() => {
-            this.controller.buffer.scrollUp(10);
-            this.refresh();
-          })
-        Button('下翻')
-          .height(26)
-          .fontSize(11)
-          .backgroundColor('#F2F2F2')
-          .fontColor('#111111')
-          .onClick(() => {
-            this.controller.buffer.scrollDown(10);
-            this.refresh();
-          })
         Blank()
         Button('重连')
           .height(26)
@@ -223,6 +233,45 @@ export struct TerminalScreen {
           .fontColor('#111111')
           .onClick(() => {
             this.controller.reconnect();
+          })
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, bottom: 6 })
+
+      Row({ space: 6 }) {
+        Button('复制')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.copyVisible();
+          })
+        Button('粘贴')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.pasteToInput();
+          })
+        Button('上翻')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.controller.buffer.scrollUp(10);
+            this.refresh();
+          })
+        Button('下翻')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.controller.buffer.scrollDown(10);
+            this.refresh();
           })
       }
       .width('100%')
