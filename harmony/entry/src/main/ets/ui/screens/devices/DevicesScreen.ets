@@ -42,6 +42,8 @@ export struct DevicesScreen {
   @State configRuntimeName: string = '';
   @State configText: string = '';
   @State configError: string = '';
+  @State archiveDeviceId: string = '';
+  @State archiveDeviceName: string = '';
 
   aboutToAppear(): void {
     this.load();
@@ -99,6 +101,26 @@ export struct DevicesScreen {
       this.runtimesError = (error as Error).message;
     } finally {
       this.discovering = false;
+    }
+  }
+
+  private async archiveDeviceSessions(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null || this.actionBusy || this.archiveDeviceId.length === 0) {
+      return;
+    }
+    this.actionBusy = true;
+    this.createError = '';
+    try {
+      const affected: number = await this.devicesApi.archiveAllSessions(session.serverUrl,
+        session.accessToken, this.archiveDeviceId, true);
+      promptAction.showToast({ message: `已归档 ${affected} 个会话` });
+      this.archiveDeviceId = '';
+      await this.load();
+    } catch (error) {
+      this.createError = (error as Error).message;
+    } finally {
+      this.actionBusy = false;
     }
   }
 
@@ -497,6 +519,17 @@ export struct DevicesScreen {
                   this.renameText = this.selected !== null ? this.selected.name : '';
                   this.renameMode = true;
                 })
+              Button('归档会话')
+                .height(34)
+                .fontSize(12)
+                .backgroundColor('#F2F2F2')
+                .fontColor('#111111')
+                .onClick(() => {
+                  if (this.selected !== null) {
+                    this.archiveDeviceId = this.selected.id;
+                    this.archiveDeviceName = this.selected.name;
+                  }
+                })
               Button('删除')
                 .height(34)
                 .fontSize(13)
@@ -628,6 +661,40 @@ export struct DevicesScreen {
               .backgroundColor('#F5F5F5')
               .copyOption(CopyOptions.LocalDevice)
           }
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
+      if (this.archiveDeviceId.length > 0) {
+        Column({ space: 10 }) {
+          Text('归档设备会话')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text(`将「${this.archiveDeviceName}」下仍在活跃列表的会话全部归档，可在已归档中恢复。`)
+            .fontSize(12)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          Row({ space: 8 }) {
+            Button(this.actionBusy ? '处理中…' : '确认归档')
+              .height(34)
+              .enabled(!this.actionBusy)
+              .onClick(() => {
+                this.archiveDeviceSessions();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.archiveDeviceId = '';
+              })
+          }
+          .width('100%')
         }
         .width('86%')
         .padding(16)

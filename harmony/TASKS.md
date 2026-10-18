@@ -84,7 +84,7 @@
 | 添加设备配对流程（start/claim/poll + 命令展示） | `DevicePairingSteps.kt`、`DevicePairingFlow.kt` | `POST /connectors`（创建 + 一次性 token）、`/pairing/*` | `ui/screens/devices/DevicesScreen.ets` | 🔄 创建 Connector + 启动命令展示已接；浏览器配对码流程未做 |
 | Runtime 列表与配置（启动/停止/校验/偏好） | `DeviceRuntimeConfigureSheet.kt`、`DeviceRuntimeState.kt` | runtime catalog、`/connectors/{id}/preferences` | `feature/devices/` | ⬜ |
 | 设备工作区列表 | `DeviceDetailControls.kt` | `GET /connectors/{id}/workspaces` | `feature/devices/` | ⬜ |
-| Runtime 发现 / 删除配置 / 批量归档 | `DevicesController.kt`、`DeviceRuntimeState.kt` | runtime discover、`PATCH /connectors/{id}` | `api/DevicesApi.ets`、`ui/screens/devices/DevicesScreen.ets` | ✅ 运行时列表、发现、新建、移除、JSON 配置编辑均已接并在线验证；按设备批量归档未做 |
+| Runtime 发现 / 删除配置 / 批量归档 | `DevicesController.kt`、`DeviceRuntimeState.kt` | runtime discover、`PATCH /connectors/{id}` | `api/DevicesApi.ets`、`ui/screens/devices/DevicesScreen.ets` | ✅ 运行时列表、发现、新建、移除、JSON 配置编辑、按设备批量归档（archive-all）均已接并在线验证 |
 
 ## 4. 文件
 

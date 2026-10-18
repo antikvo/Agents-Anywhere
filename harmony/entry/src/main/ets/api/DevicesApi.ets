@@ -27,6 +27,16 @@ interface UpdateConnectorRequest {
 /**
  * 设备（Connector）列表 API，对齐 Android api/DevicesApi.kt 的列表部分。
  */
+export interface ArchiveAllResult {
+  affected: number;
+  serverTime: string;
+}
+
+interface ArchiveAllBody {
+  archived: boolean;
+  scope: string;
+}
+
 export class DevicesApi {
   private readonly client: HttpClient;
 
@@ -94,6 +104,20 @@ export class DevicesApi {
       method: HTTP_METHOD_DELETE,
       token: token
     });
+  }
+
+  async archiveAllSessions(serverUrl: string, token: string, connectorId: string,
+    archived: boolean): Promise<number> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/sessions/archive-all`;
+    const body: ArchiveAllBody = { archived: archived, scope: 'active' };
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      body: JSON.stringify(body),
+      readTimeoutMs: 60000
+    });
+    const response: ArchiveAllResult = JSON.parse(text) as ArchiveAllResult;
+    return response.affected;
   }
 
   async listConnectors(serverUrl: string, token: string): Promise<ConnectorsResponse> {
