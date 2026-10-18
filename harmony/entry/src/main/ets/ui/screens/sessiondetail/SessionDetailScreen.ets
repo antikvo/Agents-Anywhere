@@ -17,6 +17,8 @@ import { InputRequestCard } from '../../components/InputRequestCard';
 import { TerminalScreen } from '../terminal/TerminalScreen';
 import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
 import { FileChange } from '../../../model/Timeline';
+import { pasteboard } from '@kit.BasicServicesKit';
+import { promptAction } from '@kit.ArkUI';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { fileIo } from '@kit.CoreFileKit';
 
@@ -34,6 +36,9 @@ export struct SessionDetailScreen {
   @State showTitleEdit: boolean = false;
   @State titleDraft: string = '';
   @State savingTitle: boolean = false;
+  @State showShare: boolean = false;
+  @State shareUrl: string = '';
+  @State shareBusy: boolean = false;
   @State statusText: string = '';
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
@@ -90,6 +95,34 @@ export struct SessionDetailScreen {
     this.statusText = statusLabel(nextStatus);
     this.statusTint = statusColor(nextStatus);
     this.takeover = session.takeover;
+  }
+
+  private async shareSession(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const initial: SessionItem | null = this.initial;
+    if (session === null || initial === null || this.shareBusy) {
+      return;
+    }
+    this.shareBusy = true;
+    try {
+      this.shareUrl = await this.controller.createShare(session, initial.id);
+      this.showShare = true;
+    } catch (error) {
+      promptAction.showToast({ message: (error as Error).message });
+    } finally {
+      this.shareBusy = false;
+    }
+  }
+
+  private async copyShareUrl(): Promise<void> {
+    try {
+      const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN,
+        this.shareUrl);
+      await pasteboard.getSystemPasteboard().setData(data);
+      promptAction.showToast({ message: '分享链接已复制' });
+    } catch (error) {
+      promptAction.showToast({ message: '复制失败，请手动选择链接' });
+    }
   }
 
   private async saveTitle(): Promise<void> {
@@ -683,6 +716,12 @@ export struct SessionDetailScreen {
               }
             },
             {
+              value: '分享会话链接',
+              action: () => {
+                this.shareSession();
+              }
+            },
+            {
               value: '运行参数',
               action: () => {
                 this.openSettings();
@@ -895,6 +934,49 @@ export struct SessionDetailScreen {
         .borderRadius(12)
         .backgroundColor('#FFFFFF')
       }
+      if (this.showShare) {
+        Column({ space: 10 }) {
+          Text('分享会话')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text('任何拿到链接的人都可以只读查看此会话（含附件）。')
+            .fontSize(12)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          Text(this.shareUrl)
+            .fontSize(12)
+            .fontColor('#111111')
+            .width('100%')
+            .padding(10)
+            .borderRadius(8)
+            .backgroundColor('#F5F5F5')
+            .maxLines(4)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .copyOption(CopyOptions.LocalDevice)
+          Row({ space: 8 }) {
+            Button('复制链接')
+              .height(34)
+              .onClick(() => {
+                this.copyShareUrl();
+              })
+            Button('关闭')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.showShare = false;
+              })
+          }
+          .width('100%')
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
       if (this.showTitleEdit) {
         Column({ space: 10 }) {
           Text('重命名会话')

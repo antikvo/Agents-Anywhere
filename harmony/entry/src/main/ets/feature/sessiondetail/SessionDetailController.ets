@@ -5,7 +5,7 @@ import { RealtimeClient } from '../../api/RealtimeClient';
 import { NoticeDto, RuntimeStateDto, SessionSnapshotResponse, TimelineItemDto } from '../../api/ProtocolDtos';
 import { SessionView } from '../../api/SessionDtos';
 import { AttachmentsApi, UploadedAttachment } from '../../api/AttachmentsApi';
-import { SessionsApi } from '../../api/SessionsApi';
+import { SessionsApi, ShareCreateResponse } from '../../api/SessionsApi';
 import { AuthSession } from '../auth/AuthSessionStore';
 import { TimelineRow, toTimelineRows } from '../../model/Timeline';
 
@@ -131,6 +131,12 @@ export class SessionDetailController {
     const view: SessionView = await this.sessionsApi.patchMeta(session.serverUrl,
       session.accessToken, sessionId, title, undefined, undefined);
     return view.title === undefined || view.title === null ? title : view.title;
+  }
+
+  async createShare(session: AuthSession, sessionId: string): Promise<string> {
+    const share: ShareCreateResponse = await this.sessionsApi.createSessionShare(session.serverUrl,
+      session.accessToken, sessionId);
+    return share.shareUrl;
   }
 
   async connect(): Promise<void> {

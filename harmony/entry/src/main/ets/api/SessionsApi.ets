@@ -18,6 +18,19 @@ interface MetaResponse {
 /**
  * 会话列表 API，对齐 Android api/SessionsApi.kt 的 listSessions。
  */
+export interface ShareCreateResponse {
+  shareId: string;
+  sharePath: string;
+  shareUrl: string;
+  scope: string;
+  createdAt: string;
+}
+
+interface ShareCreateBody {
+  scope: string;
+  itemIds: string[];
+}
+
 export class SessionsApi {
   private readonly client: HttpClient;
 
@@ -74,6 +87,18 @@ export class SessionsApi {
   /**
    * 标记已读。服务端要求 body 是裸 JSON 数组。
    */
+  async createSessionShare(serverUrl: string, token: string, sessionId: string): Promise<ShareCreateResponse> {
+    const path: string = `/sessions/${encodeURIComponent(sessionId)}/shares`;
+    const body: ShareCreateBody = { scope: 'session', itemIds: [] };
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      body: JSON.stringify(body),
+      readTimeoutMs: 30000
+    });
+    return JSON.parse(text) as ShareCreateResponse;
+  }
+
   async markRead(serverUrl: string, token: string, sessionIds: string[]): Promise<void> {
     await this.client.requestJson(apiUrl(serverUrl, '/sessions/read'), {
       method: HTTP_METHOD_POST,
