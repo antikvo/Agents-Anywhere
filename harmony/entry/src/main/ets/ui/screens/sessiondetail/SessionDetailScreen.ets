@@ -15,6 +15,7 @@ import { UploadedAttachment } from '../../../api/AttachmentsApi';
 import { InputAnswersPayload, InputRequestForm, parseInputRequest } from '../../../model/InputRequest';
 import { InputRequestCard } from '../../components/InputRequestCard';
 import { TerminalScreen } from '../terminal/TerminalScreen';
+import { FilesScreen } from '../files/FilesScreen';
 import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
 import { FileChange } from '../../../model/Timeline';
 import { pasteboard } from '@kit.BasicServicesKit';
@@ -65,6 +66,7 @@ export struct SessionDetailScreen {
   @State pendingNames: string[] = [];
   @State uploading: boolean = false;
   @State showTerminal: boolean = false;
+  @State showFiles: boolean = false;
 
   aboutToAppear(): void {
     if (this.initial !== null) {
@@ -768,7 +770,17 @@ export struct SessionDetailScreen {
 
   build() {
     Stack() {
-    if (this.showTerminal) {
+    if (this.showFiles) {
+      FilesScreen({
+        session: this.session,
+        connectorId: this.controller.currentConnectorId(),
+        root: this.controller.currentCwd(),
+        title: this.title.length > 0 ? this.title : '会话文件',
+        onBack: () => {
+          this.showFiles = false;
+        }
+      })
+    } else if (this.showTerminal) {
       TerminalScreen({
         session: this.session,
         sessionId: this.initial !== null ? this.initial.id : '',
@@ -833,6 +845,12 @@ export struct SessionDetailScreen {
               value: '终端',
               action: () => {
                 this.showTerminal = true;
+              }
+            },
+            {
+              value: '文件',
+              action: () => {
+                this.showFiles = true;
               }
             },
             {

@@ -40,6 +40,7 @@
 | 归档会话页与恢复 | `ui/screens/home/ArchivedSessionsScreen.kt` | `POST /sessions/archive`、`/unarchive` | `ui/screens/home/SessionListScreen.ets`（已归档 Tab） | ✅ 已归档 Tab + 行内「恢复」已接并在线验证；批量归档/取消归档未做 |
 | 归档项目选择器与按项目归档/恢复 | `ui/screens/home/ArchivedProjectPicker.kt` | `POST /projects/{id}/sessions/archive-all` | `api/ProjectsApi.ets`、`ui/screens/projects/ProjectsScreen.ets` | 🔄 按项目归档已接并在线验证；恢复入口（已归档页/项目选择器）未做 |
 | 侧边栏视图模式与项目偏好 | `HomeSidebarViewMode.kt`、`HomeProjectPreferences.kt` | — | `feature/sessions/` | ⬜ |
+| 会话文件浏览（技能/产物文件） | Android `SessionAgentFilesScreen.kt` | Files API（`/connectors/fs`） | `ui/screens/files/FilesScreen.ets` | ✅ 详情「更多 → 文件」以会话 cwd 为根浏览并在线验证 |
 | 消息长按菜单（复制文本 / 分享回复） | Android `SessionSelectionCopy.kt`、`SessionMessages.kt` | `POST /sessions/{id}/shares` | `ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 长按菜单「复制文本 / 分享回复」已接并在线验证；多消息选区复制未做 |
 | 置顶 / 归档（行内按钮 + 滑动 + 长按菜单） | `HomeSessionActions.kt` | `PATCH /sessions/{id}/meta` | `ui/screens/home/SessionListScreen.ets` | ✅ 行内按钮、左滑归档、右滑置顶、长按菜单均已在线验证 |
 | Shell 导航：侧栏 + 详情两栏（iOS 不是 TabView） | `ios/Views/ChatShell/ChatShellView.swift`、`ChatSidebarView.swift` | — | `navigation/`、`ui/shell/` | ⬜ |

@@ -74,6 +74,7 @@ export class SessionDetailController {
   private currentSessionId: string = '';
   private connectorId: string = '';
   private runtimeId: string = '';
+  private sessionCwd: string = '';
   private readonly commandsApi: CommandsApi = new CommandsApi();
 
   onRows: (rows: TimelineRow[]) => void = () => {
@@ -110,6 +111,8 @@ export class SessionDetailController {
       this.items.set(item.id, item);
     });
     this.connectorId = snapshot.session.connectorId;
+    const cwdValue: string | null | undefined = snapshot.session.cwd;
+    this.sessionCwd = cwdValue === undefined || cwdValue === null ? '' : cwdValue;
     const snapshotRuntimeId: string | null | undefined = snapshot.session.runtimeId;
     this.runtimeId = snapshotRuntimeId === undefined || snapshotRuntimeId === null ? '' : snapshotRuntimeId;
     this.cursor = snapshot.eventCursor.length > 0 ? snapshot.eventCursor : 'seq:0';
@@ -150,6 +153,14 @@ export class SessionDetailController {
     const share: ShareCreateResponse = await this.sessionsApi.createMessageShare(session.serverUrl,
       session.accessToken, sessionId, itemIds);
     return share.shareUrl;
+  }
+
+  currentConnectorId(): string {
+    return this.connectorId;
+  }
+
+  currentCwd(): string {
+    return this.sessionCwd;
   }
 
   async commands(session: AuthSession): Promise<RuntimeCommand[]> {
