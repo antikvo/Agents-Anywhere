@@ -19,6 +19,7 @@ export struct FilesScreen {
   };
   private api: FilesApi = new FilesApi();
   @State path: string = '.';
+  @State pathDraft: string = '.';
   @State entries: FsEntryDto[] = [];
   @State loading: boolean = true;
   @State errorMessage: string = '';
@@ -43,6 +44,7 @@ export struct FilesScreen {
       const result = await this.api.list(session.serverUrl, session.accessToken, this.connectorId,
         this.root, path);
       this.path = result.path;
+      this.pathDraft = result.path;
       this.entries = result.entries;
     } catch (error) {
       const message: string = (error as Error).message;
@@ -52,6 +54,20 @@ export struct FilesScreen {
     } finally {
       this.loading = false;
     }
+  }
+
+  private parentPath(path: string): string {
+    const normalized: string = path === '/' ? '/' : path;
+    if (normalized === '.' || normalized === '' || normalized === '/') {
+      return '.';
+    }
+    const trimmed: string = normalized.endsWith('/') && normalized.length > 1 ?
+      normalized.substring(0, normalized.length - 1) : normalized;
+    const slash: number = trimmed.lastIndexOf('/');
+    if (slash <= 0) {
+      return '.';
+    }
+    return trimmed.substring(0, slash);
   }
 
   private async openEntry(entry: FsEntryDto): Promise<void> {
@@ -128,6 +144,39 @@ export struct FilesScreen {
         }
         .width('100%')
         .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+
+        Row({ space: 8 }) {
+          Button('上一级')
+            .height(30)
+            .fontSize(12)
+            .backgroundColor('#F2F2F2')
+            .fontColor('#111111')
+            .onClick(() => {
+              this.load(this.parentPath(this.path));
+            })
+          TextInput({ placeholder: '路径', text: this.pathDraft })
+            .layoutWeight(1)
+            .height(32)
+            .fontSize(12)
+            .backgroundColor('#F5F5F5')
+            .borderRadius(8)
+            .onChange((value: string) => {
+              this.pathDraft = value;
+            })
+            .onSubmit(() => {
+              this.load(this.pathDraft);
+            })
+          Button('跳转')
+            .height(30)
+            .fontSize(12)
+            .backgroundColor('#F2F2F2')
+            .fontColor('#111111')
+            .onClick(() => {
+              this.load(this.pathDraft);
+            })
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, bottom: 8 })
 
         if (this.errorMessage.length > 0) {
           Text(this.errorMessage)
