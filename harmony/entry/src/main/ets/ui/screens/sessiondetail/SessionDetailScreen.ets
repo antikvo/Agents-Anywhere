@@ -18,6 +18,7 @@ import { TerminalScreen } from '../terminal/TerminalScreen';
 import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
 import { FileChange } from '../../../model/Timeline';
 import { pasteboard } from '@kit.BasicServicesKit';
+import { SessionDraftStore } from '../../../platform/SessionDraftStore';
 import { promptAction } from '@kit.ArkUI';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { fileIo } from '@kit.CoreFileKit';
@@ -32,6 +33,7 @@ export struct SessionDetailScreen {
   onBack: () => void = () => {
   };
   private controller: SessionDetailController = new SessionDetailController();
+  private drafts: SessionDraftStore = new SessionDraftStore();
   @State title: string = '';
   @State showTitleEdit: boolean = false;
   @State titleDraft: string = '';
@@ -182,6 +184,12 @@ export struct SessionDetailScreen {
       this.notices = result.notices;
       this.takeover = result.session.takeover;
       this.hasMore = result.hasMore;
+      if (this.draft.length === 0) {
+        const restored: string = await this.drafts.load(initial.id);
+        if (restored.length > 0) {
+          this.draft = restored;
+        }
+      }
       this.controller.connect();
     } catch (error) {
       this.errorMessage = (error as Error).message;
@@ -191,6 +199,7 @@ export struct SessionDetailScreen {
   }
 
   private async send(): Promise<void> {
+    const initial: SessionItem | null = this.initial;
     const content: string = this.draft.trim();
     if ((content.length === 0 && this.pendingNames.length === 0) || this.actionBusy) {
       return;
@@ -200,6 +209,9 @@ export struct SessionDetailScreen {
     try {
       await this.controller.sendMessage(content);
       this.draft = '';
+      if (initial !== null) {
+        await this.drafts.clear(initial.id);
+      }
       this.pendingNames = [];
     } catch (error) {
       this.actionError = (error as Error).message;
@@ -893,6 +905,9 @@ export struct SessionDetailScreen {
           .borderRadius(10)
           .onChange((value: string) => {
             this.draft = value;
+            if (this.initial !== null) {
+              this.drafts.save(this.initial.id, value);
+            }
           })
         Button(this.actionBusy ? '发送中' : '发送')
           .height(42)
