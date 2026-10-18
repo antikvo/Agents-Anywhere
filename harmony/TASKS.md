@@ -161,9 +161,10 @@
 15. **终端帧协议**：只有 replay / output / exit / error 四种下行帧，input / resize 两种上行；输出缓冲按 64KB 分批并带 generation 防串台。
 16. **`http.RequestMethod.PATCH` 在模拟器运行时是 undefined**：直接用枚举会退化成 GET（body 被拼进 query）。统一改用 `HTTP_METHOD_*` 字符串常量（见 `api/HttpClient.ets`）。
 17. **模拟器无窗口模式下 display 会休眠**：`uitest uiInput click` 若落在休眠帧上会被丢弃（日志静默、截图可能是旧帧）。交互验证前先 `power-shell wakeup`，且单次命令内连续操作；顽固场景改用真机。
-19. **notice.message 可能是 JSON 字符串**：真实 Runtime 的错误通知形如 `{"detail": "..."}`；详情页会先尝试解析 `detail`/`message`/`error` 再展示，避免露出大括号。
-20. **ForEach 的 key 必须带内容**：`ForEach(rows, (row) => ..., (row) => 'row-'+index)` 在数据内容变化但 key 不变时不会重绘（终端行更新踩坑）；key 里拼上行内容或版本号。
-21. **Markdown 是最大 UI 成本**：iOS 用本地 Textual（195 个 Swift 文件）做解析、表格、代码高亮、文本选择，ArkTS 需要自建等价能力，建议先做最小可用子集。
+19. **Runtime 选择要用 selectionId**：`runtime/catalogs/model|permission` 返回的 `selectionId`（`sel_model_*` / `sel_permission_*`）才是 `selections` 的取值；直接传模型 id 会得到 `codex_invalid_selection`。
+20. **notice.message 可能是 JSON 字符串**：真实 Runtime 的错误通知形如 `{"detail": "..."}`；详情页会先尝试解析 `detail`/`message`/`error` 再展示，避免露出大括号。
+21. **ForEach 的 key 必须带内容**：`ForEach(rows, (row) => ..., (row) => 'row-'+index)` 在数据内容变化但 key 不变时不会重绘（终端行更新踩坑）；key 里拼上行内容或版本号。
+22. **Markdown 是最大 UI 成本**：iOS 用本地 Textual（195 个 Swift 文件）做解析、表格、代码高亮、文本选择，ArkTS 需要自建等价能力，建议先做最小可用子集。
 
 ## 与蓝本的差异（明确不照搬）
 

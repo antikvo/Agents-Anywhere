@@ -122,7 +122,21 @@ curl -s -X POST "$BASE/sessions/create-and-start" -H "Authorization: Bearer $TOK
        "runtimeId":"<runtimeId>","cwd":"/tmp","content":"ping"}'
 ```
 
-已在本机用上述方式验证：登录、会话列表/详情、实时 WS、Markdown、项目 CRUD、设备在线状态、文件目录与文本预览、终端创建/输入/resize、真实 Codex 会话同步与消息发送（运行中会话会返回 `session is running` 并在界面提示）。
+模型/权限选择要用 catalog 里的 **selectionId**（不是模型 id），例如：
+
+```bash
+BASE=http://<host>:8000/api/v2
+RID=<runtimeId>
+curl -s "$BASE/connectors/$CID/runtimes/$RID/catalogs/model" -H "Authorization: Bearer $TOKEN"
+curl -s "$BASE/connectors/$CID/runtimes/$RID/catalogs/permission" -H "Authorization: Bearer $TOKEN"
+
+# 建会话时把 selectionId 放进 selections
+-d '{"...":"...","selections":{"model":"sel_model_xxx"}}'
+```
+
+已在本机用上述方式验证：登录、会话列表/详情、实时 WS、Markdown、项目 CRUD、设备在线状态、文件目录与文本预览、终端创建/输入/resize、多终端、后台保活、真实 Codex 会话同步与消息发送（运行中会话会返回 `session is running` 并在界面提示）。
+
+已知环境限制：本机 Codex 默认模型 `gpt-6.1-sol` 在 ChatGPT 账号下不可用；改用 catalog selection（如 `sel_model_*`）可以成功创建 thread/turn，但本轮测试中 turn 长时间停留在 running、无 assistant 输出，因此**审批成功路径未能完成验证**。
 
 ## 验证
 
