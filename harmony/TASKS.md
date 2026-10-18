@@ -125,9 +125,9 @@
 | 隐私政策、关于（版本 / 开源声明） | iOS `PrivacyPolicySheet`、`SettingsAboutView` | `ui/screens/profile/` | ⬜ |
 | 退出登录（确认 + 清凭据） | iOS `signOutAndDeleteCredentials` | `feature/auth/` | ⬜ |
 | 中英文（i18n） | Android `res/values*/strings.xml` | `core/i18n/` | ⬜ |
-| 推送（Push Kit）：审批到达通知 | 两端都未实现 | `platform/PushService.ets` | ⬜ |
+| 推送（Push Kit）：审批到达通知 | 两端都未实现 | `platform/PushService.ets` | 🔄 本地通知（新未读/测试通知 + 深链点击）已接；远程 Push Kit 与审批触发未做 |
 | 审批实况窗 | 两端都未实现 | `platform/LiveView.ets` | ⬜ |
-| 深链 / 分享（Share Kit、App Linking） | — | `agentsanywhere://session/<sessionId>`、`?sessionId=` | `core/DeepLink.ets`、`platform/DeepLinkPrefs.ets`、`pages/Index.ets` | 🔄 冷/热启动深链跳转会话已接并验证；Share Kit 分享面板与 App Linking 校验未做 |
+| 深链 / 分享（Share Kit、App Linking） | — | `agentsanywhere://session/<sessionId>`、`?sessionId=` | `core/DeepLink.ets`、`platform/DeepLinkPrefs.ets`、`pages/Index.ets` | 🔄 冷/热启动深链跳转会话已接并验证；通知点击深链已接；Share Kit 未做 |
 | 相机拍照发图（`cameraPicker`） | Android `SessionCameraCapture.kt`、iOS `PhotosPicker` | `platform/CameraPicker.ets` | ⬜ |
 
 ## 7. 质量与发布

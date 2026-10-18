@@ -2,6 +2,7 @@ import { AuthApi } from '../../../api/AuthApi';
 import { AuthMeResponse } from '../../../api/AuthDtos';
 import { APP_VERSION } from '../../../core/AppConfig';
 import { AuthController } from '../../../feature/auth/AuthController';
+import { Notifications } from '../../../platform/Notifications';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 
 /**
@@ -21,6 +22,7 @@ export struct SettingsScreen {
   };
   private api: AuthApi = new AuthApi();
   private controller: AuthController = new AuthController();
+  private notifications: Notifications = new Notifications();
   @State displayName: string = '';
   @State email: string = '';
   @State role: string = '';
@@ -33,9 +35,26 @@ export struct SettingsScreen {
   @State newPassword: string = '';
   @State confirmPassword: string = '';
   @State saving: boolean = false;
+  @State notificationsEnabled: boolean = false;
 
   aboutToAppear(): void {
     this.load();
+    this.refreshNotificationState();
+  }
+
+  private async refreshNotificationState(): Promise<void> {
+    this.notificationsEnabled = await this.notifications.isEnabled();
+  }
+
+  private async enableNotifications(): Promise<void> {
+    const enabled: boolean = await this.notifications.requestPermission();
+    this.notificationsEnabled = enabled;
+    this.message = enabled ? '通知已开启' : '通知未开启，请在系统设置中允许';
+  }
+
+  private async testNotification(): Promise<void> {
+    await this.notifications.sendTestNotification();
+    this.message = '测试通知已发送（下拉通知栏查看）';
   }
 
   private async load(): Promise<void> {
@@ -231,6 +250,30 @@ export struct SettingsScreen {
             this.infoRow('服务器', this.session !== null ? this.session.serverUrl : '—')
             Divider().color('#EFEFEF')
             this.infoRow('版本', APP_VERSION)
+            Divider().color('#EFEFEF')
+            Row({ space: 8 }) {
+              Text('通知')
+                .fontSize(14)
+                .fontColor('#111111')
+                .layoutWeight(1)
+              Text(this.notificationsEnabled ? '已开启' : '未开启')
+                .fontSize(12)
+                .fontColor(this.notificationsEnabled ? '#1F7A1F' : '#8A8A8A')
+              Button(this.notificationsEnabled ? '测试' : '开启')
+                .height(26)
+                .fontSize(11)
+                .backgroundColor('#F2F2F2')
+                .fontColor('#111111')
+                .onClick(() => {
+                  if (this.notificationsEnabled) {
+                    this.testNotification();
+                  } else {
+                    this.enableNotifications();
+                  }
+                })
+            }
+            .width('100%')
+            .padding({ top: 10, bottom: 10 })
 
             Text('工作区')
               .fontSize(12)

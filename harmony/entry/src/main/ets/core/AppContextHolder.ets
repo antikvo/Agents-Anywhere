@@ -5,14 +5,14 @@ import { common } from '@kit.AbilityKit';
  * 在 EntryAbility.onCreate 中初始化。
  */
 export class AppContextHolder {
-  private static context: common.Context | null = null;
+  private static context: common.UIAbilityContext | null = null;
 
-  static init(context: common.Context): void {
+  static init(context: common.UIAbilityContext): void {
     AppContextHolder.context = context;
   }
 
-  static require(): common.Context {
-    const context: common.Context | null = AppContextHolder.context;
+  static require(): common.UIAbilityContext {
+    const context: common.UIAbilityContext | null = AppContextHolder.context;
     if (context === null) {
       throw new Error('AppContextHolder has not been initialized.');
     }

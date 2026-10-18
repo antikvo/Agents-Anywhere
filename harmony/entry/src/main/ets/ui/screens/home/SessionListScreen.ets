@@ -2,6 +2,7 @@ import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { SessionsController, SessionsLoadResult } from '../../../feature/sessions/SessionsController';
 import { DashboardRealtimeController } from '../../../feature/sessions/DashboardRealtimeController';
 import { groupSessions, SessionGroup, SessionItem, statusColor } from '../../../model/Session';
+import { Notifications } from '../../../platform/Notifications';
 import { DevicesScreen } from '../devices/DevicesScreen';
 
 /**
@@ -24,6 +25,9 @@ export struct SessionListScreen {
   };
   private controller: SessionsController = new SessionsController();
   private dashboard: DashboardRealtimeController = new DashboardRealtimeController();
+  private notifications: Notifications = new Notifications();
+  private knownUnread: Set<string> = new Set<string>();
+  private unreadInitialized: boolean = false;
   @State sessions: SessionItem[] = [];
   @State allSessions: SessionItem[] = [];
   @State archived: boolean = false;
@@ -94,7 +98,38 @@ export struct SessionListScreen {
     });
     this.sessions = visible;
     this.groups = groupSessions(visible);
+    this.syncUnreadNotifications();
     this.tryConsumeDeepLink();
+  }
+
+  /**
+   * 新消息到达时发本地通知（App 在后台才提醒），点击通知走深链。
+   */
+  private syncUnreadNotifications(): void {
+    const unreadIds: Set<string> = new Set<string>();
+    const newlyUnread: SessionItem[] = [];
+    this.allSessions.forEach((item: SessionItem) => {
+      if (item.unread) {
+        unreadIds.add(item.id);
+        if (this.unreadInitialized && !this.knownUnread.has(item.id)) {
+          newlyUnread.push(item);
+        }
+      }
+    });
+    const firstRun: boolean = !this.unreadInitialized;
+    this.unreadInitialized = true;
+    this.knownUnread = unreadIds;
+    if (firstRun || newlyUnread.length === 0) {
+      return;
+    }
+    const foreground: boolean | undefined = AppStorage.get<boolean>('appForeground');
+    if (foreground === undefined || foreground) {
+      return;
+    }
+    newlyUnread.forEach((item: SessionItem) => {
+      this.notifications.notifySession(item.id, item.title,
+        `${item.deviceName} · ${item.runtimeName}`);
+    });
   }
 
   private async reload(): Promise<void> {

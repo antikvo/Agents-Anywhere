@@ -36,7 +36,12 @@ struct Index {
   }
 
   onPageShow(): void {
+    AppStorage.setOrCreate('appForeground', true);
     this.consumeDeepLink();
+  }
+
+  onPageHide(): void {
+    AppStorage.setOrCreate('appForeground', false);
   }
 
   private async consumeDeepLink(): Promise<void> {
