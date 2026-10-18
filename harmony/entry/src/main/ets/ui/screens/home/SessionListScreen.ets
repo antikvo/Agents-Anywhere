@@ -4,6 +4,7 @@ import { DashboardRealtimeController } from '../../../feature/sessions/Dashboard
 import { groupSessions, SessionGroup, SessionItem, statusColor } from '../../../model/Session';
 import { Notifications } from '../../../platform/Notifications';
 import { AnnouncementsApi, PublicAnnouncement } from '../../../api/AnnouncementsApi';
+import { CacheStore } from '../../../platform/CacheStore';
 import { MarkdownView } from '../../components/MarkdownView';
 import { DevicesScreen } from '../devices/DevicesScreen';
 
@@ -31,6 +32,7 @@ export struct SessionListScreen {
   private dashboard: DashboardRealtimeController = new DashboardRealtimeController();
   private notifications: Notifications = new Notifications();
   private readonly announcementsApi: AnnouncementsApi = new AnnouncementsApi();
+  private readonly cache: CacheStore = new CacheStore();
   private knownUnread: Set<string> = new Set<string>();
   private unreadInitialized: boolean = false;
   @State sessions: SessionItem[] = [];
@@ -48,6 +50,7 @@ export struct SessionListScreen {
   @State groups: SessionGroup[] = [];
   @State markingRead: boolean = false;
   @State refreshing: boolean = false;
+  @State cacheLabel: string = '';
   @State announcementMarkdown: string = '';
   @State announcementAt: string = '';
   @State announcementDismissed: boolean = false;
@@ -79,6 +82,7 @@ export struct SessionListScreen {
     this.dashboard.onState = (connected: boolean) => {
       this.liveConnected = connected;
     };
+    this.restoreCache();
     this.reload();
     this.loadAnnouncement();
     const session: AuthSession | null = this.session;
@@ -157,10 +161,41 @@ export struct SessionListScreen {
       this.nextCursor = result.nextCursor;
       this.hasMore = result.hasMore;
       this.applyFilter();
+      this.cacheLabel = '';
+      this.saveCache();
     } catch (error) {
       this.errorMessage = (error as Error).message;
     } finally {
       this.loading = false;
+    }
+  }
+
+  private async restoreCache(): Promise<void> {
+    const key: string = this.archived ? 'sessions_archived' : 'sessions_active';
+    const cached: string = await this.cache.load(key);
+    if (cached.length === 0) {
+      return;
+    }
+    try {
+      const items: SessionItem[] = JSON.parse(cached) as SessionItem[];
+      if (items.length === 0) {
+        return;
+      }
+      this.allSessions = items;
+      this.applyFilter();
+      const savedAt: string = await this.cache.savedAt(key);
+      this.cacheLabel = savedAt.length > 0 ? `离线缓存 · ${savedAt.substring(5, 16).replace('T', ' ')}` : '离线缓存';
+    } catch (error) {
+      // 缓存损坏时忽略
+    }
+  }
+
+  private async saveCache(): Promise<void> {
+    const key: string = this.archived ? 'sessions_archived' : 'sessions_active';
+    try {
+      await this.cache.save(key, JSON.stringify(this.allSessions));
+    } catch (error) {
+      // 忽略
     }
   }
 
@@ -235,6 +270,8 @@ export struct SessionListScreen {
       this.nextCursor = result.nextCursor;
       this.hasMore = result.hasMore;
       this.applyFilter();
+      this.cacheLabel = '';
+      this.saveCache();
     } catch (error) {
       this.actionError = (error as Error).message;
     } finally {
@@ -474,6 +511,14 @@ export struct SessionListScreen {
           this.query = value;
           this.applyFilter();
         })
+
+      if (this.cacheLabel.length > 0) {
+        Text(this.cacheLabel)
+          .fontSize(11)
+          .fontColor('#B26B00')
+          .width('100%')
+          .padding({ left: 16, right: 16, bottom: 4 })
+      }
 
       if (this.actionError.length > 0) {
         Text(this.actionError)

@@ -317,6 +317,36 @@ export class SessionDetailController {
     }
   }
 
+  /**
+   * 审批/输入请求回应后主动对齐快照：实时事件可能只更新部分字段，
+   * 重新拉快照可以保证工具状态与最终回复一致。
+   */
+  async resyncTimeline(): Promise<void> {
+    const session: AuthSession | null = this.currentSession;
+    if (session === null) {
+      return;
+    }
+    const snapshot: SessionSnapshotResponse = await this.sessionsApi.getSnapshot(session.serverUrl,
+      session.accessToken, this.currentSessionId);
+    this.items.clear();
+    snapshot.timeline.items.forEach((item: TimelineItemDto) => {
+      this.items.set(item.id, item);
+    });
+    if (snapshot.eventCursor.length > 0) {
+      this.cursor = snapshot.eventCursor;
+    }
+    this.notices.clear();
+    const snapshotNotices: NoticeDto[] | null | undefined = snapshot.notices;
+    if (snapshotNotices !== undefined && snapshotNotices !== null) {
+      snapshotNotices.forEach((notice: NoticeDto) => {
+        this.notices.set(notice.noticeId, notice);
+      });
+    }
+    this.hasMore = snapshot.timeline.hasMore;
+    this.onRows(this.rows());
+    this.onNotices(this.openNotices());
+  }
+
   async respondNotice(noticeId: string, actionId: string, input?: Object): Promise<void> {
     const session: AuthSession | null = this.currentSession;
     if (session === null) {

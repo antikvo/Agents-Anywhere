@@ -59,7 +59,7 @@
 | 附件：图片查看、文件上传/下载、相机拍照 | `AttachmentImages.kt`、`SessionCameraCapture.kt`、`SessionAttachmentTransfer.kt` | `POST /sessions/{id}/attachments`、`GET .../attachments/{fileId}`（返回 contentBase64） | `ui/components/AttachmentImage.ets`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 图片查看 + multipart 上传（相册选图）已接；下载/相机/非图片预览未做 |
 | 输入框：文本、附件、命令建议、草稿持久化、发送 | `SessionComposer.kt`、`SessionComposerDraftStore.kt`、`SessionCameraCapture.kt` | `POST /sessions/{id}/runtime/messages`、`GET /connectors/{id}/runtimes/{rid}/commands` | `SessionDetailScreen.ets`、`platform/SessionDraftStore.ets`、`api/CommandsApi.ets` | 🔄 文本发送、相册附件上传、草稿持久化、`/` 命令建议、`+` 菜单「相册/拍照」已接；模拟器无相机，拍照成功路径待真机确认 |
 | 斜杠命令（catalog、前缀匹配、execute/selector、接管与状态门禁） | `ios/Models/Chat/RuntimeCommandModel.swift`、`CommandSuggestionPanel.swift` | `GET /connectors/{id}/runtimes/{rid}/commands` | `api/CommandsApi.ets`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 catalog 拉取 + `/` 前缀匹配 + 空降级已接并验证；命令 execute/selector 未做 |
-| 交互 Dock：审批/输入请求纵向翻页卡片与详情 | `ios/Views/Chat/SessionInteractionDock.swift`、`SessionInteractionCard.swift` | interaction/approval 端点 | `ui/screens/sessiondetail/InteractionDock.ets` | ⬜ |
+| 交互 Dock：审批/输入请求纵向翻页卡片与详情 | `ios/Views/Chat/SessionInteractionDock.swift`、`SessionInteractionCard.swift` | interaction/approval 端点 | `ui/screens/sessiondetail/SessionDetailScreen.ets`（notice 卡片） | 🔄 审批卡片已验证；input_request 表单卡片已接，提交成功路径待验 |
 | 发送消息 / 打断 / 接管 | `SessionDetailController.kt`、`SessionRuntimeControls.kt` | runtime messages / interrupt / takeover | `feature/sessiondetail/` | 🔄 发送与接管已通；打断已接端点 |
 | 乐观消息与 `clientMessageId` 幂等 | `SessionOptimisticMessageStore.kt` | runtime messages | `feature/sessiondetail/OptimisticMessages.ets` | ⬜ |
 | 接管（takeover）开关与确认 | `SessionRuntimeControls.kt`、`ios/Views/Chat/Composer/SessionTakeoverConfirmation.swift` | `POST/DELETE /sessions/{id}/takeover` | 详情页头部按钮 | ✅ 开关已通（模拟器实测 + 发送行为变化）；确认弹窗未做 |
@@ -164,7 +164,7 @@
 15. **终端帧协议**：只有 replay / output / exit / error 四种下行帧，input / resize 两种上行；输出缓冲按 64KB 分批并带 generation 防串台。
 16. **`http.RequestMethod.PATCH` 在模拟器运行时是 undefined**：直接用枚举会退化成 GET（body 被拼进 query）。统一改用 `HTTP_METHOD_*` 字符串常量（见 `api/HttpClient.ets`）。
 17. **模拟器无窗口模式下 display 会休眠**：`uitest uiInput click` 若落在休眠帧上会被丢弃（日志静默、截图可能是旧帧）。交互验证前先 `power-shell wakeup`，且单次命令内连续操作；顽固场景改用真机。
-19. **审批成功路径的环境阻塞**：本机 Codex 默认模型不可用；改用 catalog selection（`sel_model_*`）可创建 thread 并进入 running，但 turn 长时间无输出；Claude Runtime 直接返回 `Not logged in · Please run /login`。审批卡片的成功路径需要可用的 Runtime 凭据后再验。
+19. **审批成功路径已验证**：用 catalog selection（`sel_model_DdWBn87Qps6RumWkjgRjbZY1` = gpt-5.6-sol + `sel_permission_...` = request_approval）创建 Codex 会话，turn 在数分钟后产生 approval notice；App 内点 Approve 后服务端约定状态、工具输出与最终回复均正确，命令实际写入了 `/var/tmp/harmony-approval.txt`。审批响应后需要主动 `resyncTimeline()` 才能让工具状态与最终回复在 UI 收敛。
 20. **Runtime 选择要用 selectionId**：`runtime/catalogs/model|permission` 返回的 `selectionId`（`sel_model_*` / `sel_permission_*`）才是 `selections` 的取值；直接传模型 id 会得到 `codex_invalid_selection`。
 21. **notice.message 可能是 JSON 字符串**：真实 Runtime 的错误通知形如 `{"detail": "..."}`；详情页会先尝试解析 `detail`/`message`/`error` 再展示，避免露出大括号。
 22. **ForEach 的 key 必须带内容**：`ForEach(rows, (row) => ..., (row) => 'row-'+index)` 在数据内容变化但 key 不变时不会重绘（终端行更新踩坑）；key 里拼上行内容或版本号。

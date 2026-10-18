@@ -216,4 +216,4 @@ hdc shell aa start -a EntryAbility -b com.agentsanywhere.harmony
 
 - 程序化读取剪贴板受系统限制，粘贴请用输入框长按菜单
 - 通知点击深链、后台保活、终端断线重连在真机上的行为可能与模拟器不同
-- 审批成功路径依赖可用的 Agent Runtime 凭据，本机 Codex/Claude 账号受限时无法验证
+- 审批成功路径已用 Codex + request_approval 验证；Claude Runtime 本机凭据受限时仍会报 `Not logged in`

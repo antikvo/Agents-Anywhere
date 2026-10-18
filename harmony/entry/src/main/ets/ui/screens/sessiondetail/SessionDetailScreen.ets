@@ -482,6 +482,7 @@ export struct SessionDetailScreen {
     this.actionError = '';
     try {
       await this.controller.respondNotice(notice.noticeId, actionId, input);
+      await this.controller.resyncTimeline();
     } catch (error) {
       this.actionError = (error as Error).message;
     } finally {
