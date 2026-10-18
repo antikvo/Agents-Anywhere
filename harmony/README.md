@@ -93,7 +93,24 @@ uv run anywhere-cli start \
 
 3. 客户端「设置 → 服务器」填同一个地址并登录（本地测试账号见 [docs/development.md](../docs/development.md)）。
 
-已在本机用上述方式验证：登录、会话列表/详情、实时 WS、Markdown、项目 CRUD、设备在线状态、文件目录与文本预览、终端创建/输入/resize。
+4. 需要真实 Runtime 联调时，先发现并创建 Runtime 实例，再建会话：
+
+```bash
+TOKEN=<登录返回的 accessToken>
+BASE=http://<host>:8000/api/v2
+CID=<connectorId>
+
+curl -s -X POST "$BASE/connectors/$CID/runtime-types/discover" -H "Authorization: Bearer $TOKEN"
+curl -s -X POST "$BASE/connectors/$CID/runtimes" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"runtimeType":"codex","name":"Codex","config":{},"active":true}'
+curl -s -X POST "$BASE/sessions/create-and-start" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"connectorId":"'$CID'","projectId":"<projectId>","runtime":"codex",
+       "runtimeId":"<runtimeId>","cwd":"/tmp","content":"ping"}'
+```
+
+已在本机用上述方式验证：登录、会话列表/详情、实时 WS、Markdown、项目 CRUD、设备在线状态、文件目录与文本预览、终端创建/输入/resize、真实 Codex 会话同步与消息发送（运行中会话会返回 `session is running` 并在界面提示）。
 
 ## 验证
 
