@@ -1,6 +1,6 @@
 import { http } from '@kit.NetworkKit';
 import { apiUrl } from '../core/ServerUrl';
-import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE } from './HttpClient';
+import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE, HTTP_METHOD_PUT } from './HttpClient';
 import { ConnectorView, ConnectorsResponse } from './SessionDtos';
 import { CreateRuntimeBody, DeviceRuntimeItem, DeviceRuntimeListResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
 
@@ -68,6 +68,19 @@ export class DevicesApi {
       method: HTTP_METHOD_POST,
       token: token,
       body: body,
+      readTimeoutMs: 30000
+    });
+    return JSON.parse(text) as DeviceRuntimeItem;
+  }
+
+  async updateRuntimeConfig(serverUrl: string, token: string, connectorId: string,
+    runtimeId: string, config: Record<string, Object>): Promise<DeviceRuntimeItem> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/runtimes/` +
+      `${encodeURIComponent(runtimeId)}/config`;
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_PUT,
+      token: token,
+      body: JSON.stringify(config),
       readTimeoutMs: 30000
     });
     return JSON.parse(text) as DeviceRuntimeItem;

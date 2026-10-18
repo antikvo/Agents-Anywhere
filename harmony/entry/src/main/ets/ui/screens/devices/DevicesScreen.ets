@@ -38,6 +38,10 @@ export struct DevicesScreen {
   @State deleteRuntimeId: string = '';
   @State deleteRuntimeName: string = '';
   @State runtimeBusy: boolean = false;
+  @State configRuntimeId: string = '';
+  @State configRuntimeName: string = '';
+  @State configText: string = '';
+  @State configError: string = '';
 
   aboutToAppear(): void {
     this.load();
@@ -95,6 +99,34 @@ export struct DevicesScreen {
       this.runtimesError = (error as Error).message;
     } finally {
       this.discovering = false;
+    }
+  }
+
+  private async saveRuntimeConfig(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const selected: DeviceItem | null = this.selected;
+    if (session === null || selected === null || this.runtimeBusy || this.configRuntimeId.length === 0) {
+      return;
+    }
+    let parsed: Record<string, Object>;
+    try {
+      parsed = JSON.parse(this.configText) as Record<string, Object>;
+    } catch (error) {
+      this.configError = 'JSON 解析失败，请检查格式';
+      return;
+    }
+    this.runtimeBusy = true;
+    this.configError = '';
+    try {
+      await this.devicesApi.updateRuntimeConfig(session.serverUrl, session.accessToken, selected.id,
+        this.configRuntimeId, parsed);
+      promptAction.showToast({ message: '运行时配置已保存' });
+      this.configRuntimeId = '';
+      await this.loadRuntimes(selected.id);
+    } catch (error) {
+      this.configError = (error as Error).message;
+    } finally {
+      this.runtimeBusy = false;
     }
   }
 
@@ -397,6 +429,18 @@ export struct DevicesScreen {
                   .fontSize(10)
                   .fontColor(runtime.status === 'ready' || runtime.status === 'running' ?
                     '#1F7A1F' : '#8A8A8A')
+                Text('配置')
+                  .fontSize(10)
+                  .fontColor('#3A6FD8')
+                  .padding({ left: 8 })
+                  .onClick(() => {
+                    this.configRuntimeId = runtime.runtimeId;
+                    this.configRuntimeName = runtime.name;
+                    const config: Record<string, Object> | null | undefined = runtime.config;
+                    this.configText = config === undefined || config === null ?
+                      '{}' : JSON.stringify(config);
+                    this.configError = '';
+                  })
                 Text('移除')
                   .fontSize(10)
                   .fontColor('#D93026')
@@ -584,6 +628,55 @@ export struct DevicesScreen {
               .backgroundColor('#F5F5F5')
               .copyOption(CopyOptions.LocalDevice)
           }
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
+      if (this.configRuntimeId.length > 0) {
+        Column({ space: 10 }) {
+          Text(`配置 ${this.configRuntimeName}`)
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text('以 JSON 编辑运行时配置；保存后由 Connector 校验并重启该运行时。')
+            .fontSize(11)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          TextArea({ text: this.configText })
+            .height(140)
+            .fontSize(12)
+            .fontFamily('monospace')
+            .backgroundColor('#F5F5F5')
+            .borderRadius(8)
+            .onChange((value: string) => {
+              this.configText = value;
+            })
+          if (this.configError.length > 0) {
+            Text(this.configError)
+              .fontSize(11)
+              .fontColor('#D93026')
+              .width('100%')
+          }
+          Row({ space: 8 }) {
+            Button(this.runtimeBusy ? '保存中…' : '保存')
+              .height(34)
+              .enabled(!this.runtimeBusy)
+              .onClick(() => {
+                this.saveRuntimeConfig();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.configRuntimeId = '';
+              })
+          }
+          .width('100%')
         }
         .width('86%')
         .padding(16)

@@ -10,6 +10,7 @@ export const HTTP_METHOD_GET: http.RequestMethod = 'GET' as http.RequestMethod;
 export const HTTP_METHOD_POST: http.RequestMethod = 'POST' as http.RequestMethod;
 export const HTTP_METHOD_PATCH: http.RequestMethod = 'PATCH' as http.RequestMethod;
 export const HTTP_METHOD_DELETE: http.RequestMethod = 'DELETE' as http.RequestMethod;
+export const HTTP_METHOD_PUT: http.RequestMethod = 'PUT' as http.RequestMethod;
 
 export enum ApiErrorKind {
   Network = 'network',
@@ -64,9 +65,10 @@ export class HttpClient {
   }
 
   async request(rawUrl: string, options: RequestOptions = {}): Promise<HttpResult> {
-    if (String(options.method ?? HTTP_METHOD_GET) === 'PATCH') {
+    const rawMethod: string = String(options.method ?? HTTP_METHOD_GET);
+    if (rawMethod === 'PATCH' || rawMethod === 'PUT') {
       const body: string = typeof options.body === 'string' ? options.body : '';
-      const raw: RawHttpResponse = await this.rawClient.request('PATCH', rawUrl,
+      const raw: RawHttpResponse = await this.rawClient.request(rawMethod, rawUrl,
         options.token ?? '', body);
       return { statusCode: raw.statusCode, text: raw.text };
     }

@@ -11,6 +11,7 @@ export interface DeviceRuntimeItem {
   active: boolean;
   status: string;
   reason?: string | null;
+  config?: Record<string, Object> | null;
 }
 
 export interface DeviceRuntimeListResponse {
