@@ -69,7 +69,7 @@
 | Runtime 设置：模型、权限、审批策略、配置 | `SessionRuntimeSettingsSheet.kt`、`SessionRuntimeState.kt` | `GET /sessions/{id}/runtime/state`、`/capabilities`、`PATCH /runtime/selections` | 详情页「参数」浮层 | 🔄 状态/选择只读展示与离线降级已接；catalogs 在线时渲染与 selection 修改未做 |
 | 会话 meta：标题、已读、归档 | `SessionsApi.kt` | `GET/PATCH /sessions/{id}/meta`、`POST /sessions/read` | `feature/sessiondetail/`、`ui/screens/sessiondetail/SessionDetailScreen.ets`、`SessionListScreen.ets` | ✅ 已读回执、详情重命名、列表「全部已读」均已接并验证 |
 | 会话内文件面板 | `SessionAgentFilesScreen.kt` | fs 端点 | `ui/screens/sessiondetail/SessionDetailScreen.ets`（复用 FilesScreen） | ✅ 详情「更多 → 文件」以会话 cwd 浏览已在线验证 |
-| 本轮文件审阅（+A/−D 汇总、逐文件 diff） | `ios/Views/Chat/SessionTurnReviewSheet.swift` | timeline 变更数据 | `ui/screens/sessiondetail/TurnReviewSheet.ets` | ⬜ |
+| 本轮文件审阅（+A/−D 汇总、逐文件 diff） | `ios/Views/Chat/SessionTurnReviewSheet.swift` | timeline 变更数据 | `ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 artifact 卡片展示文件变更路径/摘要；汇总统计与逐文件 diff 审阅页未做 |
 | 会话详情 sheet（ID、workspace、状态、条目数、待回应交互） | `ios/Views/Chat/SessionDetailsSheet.swift` | 快照字段 | `ui/screens/sessiondetail/SessionDetailScreen.ets` | ✅ 详情「更多 → 会话详情」展示 ID/工作区/状态/条目数/待回应/接管已在线验证 |
 | 会话时间线 JSON 导出（memory / remote 分页） | `ios/Business/V2SessionExportService.swift` | `GET /sessions/{id}/timeline?mode=latest/history&beforeOrderSeq=` | `api/SessionsApi.ets`（exportTimeline）、`SessionDetailScreen.ets` | ✅ 详情「导出时间线」：latest 首页 + history 向前翻页、按 id 去重、orderSeq 排序后写入 files 目录；已在模拟器导出 133 条（65 KB）并校验文件 |
 | 会话分享链接 | `android/api/SessionsApi.kt`（`createSessionShare`） | `POST /sessions/{id}/shares` | `api/SessionsApi.ets`、`SessionDetailScreen.ets` | ✅ 会话与单条回复分享均已在线验证 |
@@ -126,13 +126,13 @@
 | 项目模式开关 / 紧凑会话列表 | iOS `ProjectSidebarPreferences` | `feature/sessions/` | ⬜ |
 | 服务器状态、地址展示与复制 | iOS `SettingsServerView` | `ui/screens/profile/SettingsScreen.ets` | ✅ 地址展示已接；复制按钮未做 |
 | 隐私政策、关于（版本 / 开源声明） | iOS `PrivacyPolicySheet`、`SettingsAboutView` | `ui/screens/profile/` | 🔄 设置页关于/版本/隐私说明已接；独立隐私政策页未做 |
-| 退出登录（确认 + 清凭据） | iOS `signOutAndDeleteCredentials` | `feature/auth/` | ⬜ |
+| 退出登录（确认 + 清凭据） | iOS `signOutAndDeleteCredentials` | `feature/auth/` | `ui/screens/profile/SettingsScreen.ets`、`AuthSessionStore.ets` | ✅ 设置页退出登录清除会话与 Asset Store 凭据（保留服务器地址）；确认弹窗未做 |
 | 中英文（i18n） | Android `res/values*/strings.xml` | `core/i18n/` | ⬜ |
 | 实况窗（Live View） | iOS Live Activity / Android 通知 | Live View Kit | — | ⬜ 不适用：当前 DevEco SDK 未包含 Live View Kit，且需 AGC 配置与系统审批 |
 | 推送（Push Kit）：审批到达通知 | 两端都未实现 | `platform/PushService.ets` | ⬜ 不适用/待外部条件：当前 DevEco SDK 未包含 `@kit.PushKit`，且需 AGC 与服务端推送配置；本地通知（新未读/测试/深链）已覆盖提醒需求 |
 | 审批实况窗 | 两端都未实现 | `platform/LiveView.ets` | ⬜ 不适用：依赖 Live View Kit 与 AGC 配置，当前 SDK 不含 |
 | 深链 / 分享（Share Kit、App Linking） | — | `agentsanywhere://session/<sessionId>`、`?sessionId=` | `core/DeepLink.ets`、`platform/DeepLinkPrefs.ets`、`pages/Index.ets` | 🔄 冷/热启动深链跳转会话已接并验证；通知点击深链已接；Share Kit 未做 |
-| 相机拍照发图（`cameraPicker`） | Android `SessionCameraCapture.kt`、iOS `PhotosPicker` | `platform/CameraPicker.ets` | ⬜ |
+| 相机拍照发图（`cameraPicker`） | Android `SessionCameraCapture.kt`、iOS `PhotosPicker` | `platform/CameraPicker.ets` | `ui/screens/sessiondetail/SessionDetailScreen.ets` | ✅ composer「+ → 拍照上传」经 `cameraPicker` 选图后走附件上传；模拟器无相机时降级提示，真机拍照待验 |
 
 ## 7. 质量与发布
 

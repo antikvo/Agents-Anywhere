@@ -176,3 +176,12 @@ harmony/
 - [HarmonyOS 5 终端破千万、国内份额第二](https://news.pconline.com.cn/1955/19551532.html)、[份额与生态进展](https://www.x-techcon.com/article/88027.html)
 - [Flutter 与 OpenHarmony 实战（社区）](https://cloud.tencent.cn/developer/article/2606590)
 - [已有 React Native 工程如何适配 HarmonyOS（InfoQ）](https://www.infoq.cn/article/tbrp6bycznxedy1s5fzs)
+
+
+## 10. 当前状态（收尾盘点）
+
+- 构建：`hvigorw assembleHap` 通过；`harmony/scripts/verify.sh`（含测试 HAP）通过。
+- 单测：`@ohos/hypium` 28 个用例，模拟器执行 28/28 通过。
+- 模拟器实测链路：登录（密码 / 扫码头像深链 / 注册）、会话列表（分组/搜索/筛选/置顶/归档/下拉刷新/分页/离线缓存）、新建会话、会话详情（WS 实时、Markdown/代码/图片、工具/MCP/思考/审批/问答卡片、审批 Approve、steer、同步、导出、多选复制、分享）、终端（多标签、VT 渲染、快捷键、Ctrl 锁存、断线重连、后台保活）、文件（目录、文本、图片、分享）、项目、设备与运行时、设置（昵称/改密/通知/检查更新/外观/退出）。
+- 依赖外部条件未验证：远程 Push Kit、实况窗、OAuth 回跳、真机相机扫码与拍照。
+- 明确「不适用」：服务端无 `/continue`、无 workspaces 接口、无 OAuth 配置时的入口隐藏。
