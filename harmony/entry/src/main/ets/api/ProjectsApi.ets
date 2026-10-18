@@ -18,6 +18,16 @@ interface PatchProjectRequest {
   pinned?: boolean;
 }
 
+interface ArchiveAllRequest {
+  archived: boolean;
+  scope: string;
+}
+
+export interface ArchiveAllResult {
+  affected: number;
+  serverTime: string;
+}
+
 interface DeleteProjectResponse {
   projectId: string;
   detachedSessions: number;
@@ -63,6 +73,16 @@ export class ProjectsApi {
       });
     const response: ProjectResponse = JSON.parse(text) as ProjectResponse;
     return response.project;
+  }
+
+  async archiveAllSessions(serverUrl: string, token: string, projectId: string,
+    archived: boolean, scope: string): Promise<ArchiveAllResult> {
+    const body: ArchiveAllRequest = { archived: archived, scope: scope };
+    const text: string = await this.client.requestJson(
+      apiUrl(serverUrl, `/projects/${encodeURIComponent(projectId)}/sessions/archive-all`),
+      { method: HTTP_METHOD_POST, token: token, body: JSON.stringify(body) });
+    const response: ArchiveAllResult = JSON.parse(text) as ArchiveAllResult;
+    return response;
   }
 
   async deleteProject(serverUrl: string, token: string, projectId: string): Promise<number> {

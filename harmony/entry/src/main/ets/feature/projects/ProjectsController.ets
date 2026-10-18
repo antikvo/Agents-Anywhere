@@ -36,6 +36,12 @@ export class ProjectsController {
       name.trim());
   }
 
+  async archiveAll(session: AuthSession, projectId: string, archived: boolean): Promise<number> {
+    const result = await this.api.archiveAllSessions(session.serverUrl, session.accessToken,
+      projectId, archived, 'active');
+    return result.affected;
+  }
+
   async remove(session: AuthSession, projectId: string): Promise<number> {
     return await this.api.deleteProject(session.serverUrl, session.accessToken, projectId);
   }

@@ -4,6 +4,7 @@ import { ProjectsController } from '../../../feature/projects/ProjectsController
 import { ProjectItem } from '../../../model/Project';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { FilesScreen } from '../files/FilesScreen';
+import { promptAction } from '@kit.ArkUI';
 
 /**
  * 项目管理：列表、新建（名称/工作区/设备）、重命名、删除。
@@ -28,6 +29,8 @@ export struct ProjectsScreen {
   @State renameId: string = '';
   @State renameText: string = '';
   @State deleteId: string = '';
+  @State archiveId: string = '';
+  @State archiveName: string = '';
   @State showFiles: boolean = false;
   @State filesConnectorId: string = '';
   @State filesRoot: string = '';
@@ -89,6 +92,25 @@ export struct ProjectsScreen {
     try {
       await this.controller.rename(session, this.renameId, this.renameText);
       this.renameId = '';
+      await this.load();
+    } catch (error) {
+      this.errorMessage = (error as Error).message;
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async archiveProjectSessions(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null || this.busy || this.archiveId.length === 0) {
+      return;
+    }
+    this.busy = true;
+    this.errorMessage = '';
+    try {
+      const affected: number = await this.controller.archiveAll(session, this.archiveId, true);
+      this.archiveId = '';
+      promptAction.showToast({ message: `已归档 ${affected} 个会话` });
       await this.load();
     } catch (error) {
       this.errorMessage = (error as Error).message;
@@ -255,6 +277,15 @@ export struct ProjectsScreen {
                         this.filesTitle = project.name;
                         this.showFiles = true;
                       })
+                    Button('归档')
+                      .height(24)
+                      .fontSize(10)
+                      .backgroundColor('#EAEAEA')
+                      .fontColor('#444444')
+                      .onClick(() => {
+                        this.archiveId = project.id;
+                        this.archiveName = project.name;
+                      })
                     Button('重命名')
                       .height(24)
                       .fontSize(10)
@@ -324,6 +355,40 @@ export struct ProjectsScreen {
               .fontColor('#111111')
               .onClick(() => {
                 this.renameId = '';
+              })
+          }
+          .width('100%')
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
+      if (this.archiveId.length > 0) {
+        Column({ space: 10 }) {
+          Text('归档项目会话')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text(`将「${this.archiveName}」下仍在活跃列表的会话全部归档，可在已归档中恢复。`)
+            .fontSize(12)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          Row({ space: 8 }) {
+            Button(this.busy ? '处理中…' : '确认归档')
+              .height(34)
+              .enabled(!this.busy)
+              .onClick(() => {
+                this.archiveProjectSessions();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.archiveId = '';
               })
           }
           .width('100%')
