@@ -7,8 +7,15 @@ import { SessionView } from '../../api/SessionDtos';
 import { AttachmentsApi, UploadedAttachment } from '../../api/AttachmentsApi';
 import { SessionsApi, ShareCreateResponse } from '../../api/SessionsApi';
 import { CommandsApi, RuntimeCommand } from '../../api/CommandsApi';
+
 import { AuthSession } from '../auth/AuthSessionStore';
 import { replaceTimelineItems, TimelineRow, toTimelineRows, upsertTimelineItem } from '../../model/Timeline';
+
+interface OptimisticContent {
+  kind: string;
+  text: string;
+  clientMessageId: string;
+}
 
 export interface SessionDetailResult {
   session: SessionView;
@@ -61,6 +68,7 @@ export class SessionDetailController {
   private readonly realtimeApi: RealtimeApi;
   private readonly realtime: RealtimeClient;
   private readonly items: Map<string, TimelineItemDto> = new Map<string, TimelineItemDto>();
+  private readonly optimistic: TimelineItemDto[] = [];
   private readonly notices: Map<string, NoticeDto> = new Map<string, NoticeDto>();
   private readonly clientId: string = `harmony-${Date.now()}`;
   private cursor: string = 'seq:0';
@@ -232,6 +240,14 @@ export class SessionDetailController {
       const item: TimelineItemDto | null | undefined = payload.item;
       if (item === undefined || item === null) {
         return false;
+      }
+      if (item.type === 'message' && item.role === 'user') {
+        const text: string = this.textOfContent(item.content);
+        for (let index = this.optimistic.length - 1; index >= 0; index--) {
+          if (this.textOfContent(this.optimistic[index].content) === text) {
+            this.optimistic.splice(index, 1);
+          }
+        }
       }
       upsertTimelineItem(this.items, item);
       return true;
@@ -493,8 +509,16 @@ export class SessionDetailController {
     this.pendingAttachments.forEach((attachment: UploadedAttachment) => {
       fileIds.push(attachment.fileId);
     });
-    await this.sessionsApi.sendMessage(session.serverUrl, session.accessToken,
-      this.currentSessionId, content, clientMessageId, fileIds);
+    this.addOptimistic(content, clientMessageId);
+    this.onRows(this.rows());
+    try {
+      await this.sessionsApi.sendMessage(session.serverUrl, session.accessToken,
+        this.currentSessionId, content, clientMessageId, fileIds);
+    } catch (error) {
+      this.dropOptimistic(content);
+      this.onRows(this.rows());
+      throw error as Error;
+    }
     this.pendingAttachments = [];
   }
 
@@ -508,11 +532,51 @@ export class SessionDetailController {
     return result;
   }
 
+  private textOfContent(content: Object): string {
+    try {
+      const shape = content as Record<string, string>;
+      const text = shape.text;
+      return text === undefined || text === null ? '' : text;
+    } catch (error) {
+      return '';
+    }
+  }
+
   private rows(): TimelineRow[] {
     const all: TimelineItemDto[] = [];
     this.items.forEach((item: TimelineItemDto) => {
       all.push(item);
     });
+    this.optimistic.forEach((item: TimelineItemDto) => {
+      all.push(item);
+    });
     return toTimelineRows(all);
+  }
+
+  private addOptimistic(content: string, clientMessageId: string): void {
+    const shape: OptimisticContent = {
+      kind: 'markdown',
+      text: content,
+      clientMessageId: clientMessageId
+    };
+    const item: TimelineItemDto = {
+      id: `local-${clientMessageId}`,
+      type: 'message',
+      role: 'user',
+      content: shape,
+      status: 'pending',
+      orderSeq: 2147483000,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.optimistic.push(item);
+  }
+
+  private dropOptimistic(content: string): void {
+    for (let index = this.optimistic.length - 1; index >= 0; index--) {
+      if (this.textOfContent(this.optimistic[index].content) === content) {
+        this.optimistic.splice(index, 1);
+      }
+    }
   }
 }

@@ -61,7 +61,7 @@
 | 斜杠命令（catalog、前缀匹配、execute/selector、接管与状态门禁） | `ios/Models/Chat/RuntimeCommandModel.swift`、`CommandSuggestionPanel.swift` | `GET /connectors/{id}/runtimes/{rid}/commands` | `api/CommandsApi.ets`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 catalog 拉取 + `/` 前缀匹配 + 空降级已接并验证；命令 execute/selector 未做 |
 | 交互 Dock：审批/输入请求纵向翻页卡片与详情 | `ios/Views/Chat/SessionInteractionDock.swift`、`SessionInteractionCard.swift` | interaction/approval 端点 | `ui/screens/sessiondetail/SessionDetailScreen.ets`（notice 卡片） | 🔄 审批卡片已验证；input_request 表单卡片已接，提交成功路径待验 |
 | 发送消息 / 打断 / 接管 | `SessionDetailController.kt`、`SessionRuntimeControls.kt` | runtime messages / interrupt / takeover | `feature/sessiondetail/` | 🔄 发送与接管已通；打断已接端点 |
-| 乐观消息与 `clientMessageId` 幂等 | `SessionOptimisticMessageStore.kt` | runtime messages | `feature/sessiondetail/OptimisticMessages.ets` | ⬜ |
+| 乐观消息与 `clientMessageId` 幂等 | `SessionOptimisticMessageStore.kt` | runtime messages | `feature/sessiondetail/SessionDetailController.ets` | ✅ 发送时立即插入本地 pending 气泡（带 clientMessageId），服务端回显同文本时自动替换、失败时回滚；已在真实会话验证不重复 |
 | 接管（takeover）开关与确认 | `SessionRuntimeControls.kt`、`ios/Views/Chat/Composer/SessionTakeoverConfirmation.swift` | `POST/DELETE /sessions/{id}/takeover` | 详情页头部按钮 | ✅ 开关已通（模拟器实测 + 发送行为变化）；确认弹窗未做 |
 | 继续 errored 会话 | `SessionRuntimeControls.kt` | `POST /sessions/{id}/continue` | — | ⬜ 不适用：服务端未提供 `/continue` 接口，重新发送消息即可继续 |
 | 审批（approval）卡片与处理 | `SessionMessages.kt`、`SessionInteractionCard`（iOS） | Runtime Notice：`GET /runtime/notices`、`POST /notices/{id}/respond`（approve / approve_for_session / reject / cancel） | `ui/screens/sessiondetail/SessionDetailScreen.ets`（noticeCard） | ✅ 卡片、错误通知、respond、Approve 成功路径（命令执行 + 最终回复）均已端到端验证 |
