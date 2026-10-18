@@ -2,7 +2,8 @@ import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { DevicesController } from '../../../feature/devices/DevicesController';
 import { DeviceItem } from '../../../model/Device';
 import { DevicesApi } from '../../../api/DevicesApi';
-import { DeviceRuntimeItem } from '../../../api/DeviceRuntimeDtos';
+import { promptAction } from '@kit.ArkUI';
+import { DeviceRuntimeItem, RuntimeTypeItem } from '../../../api/DeviceRuntimeDtos';
 
 /**
  * 设备列表：名称、在线状态、系统与最后在线时间。
@@ -29,6 +30,8 @@ export struct DevicesScreen {
   @State runtimes: DeviceRuntimeItem[] = [];
   @State runtimesLoading: boolean = false;
   @State runtimesError: string = '';
+  @State runtimeTypes: RuntimeTypeItem[] = [];
+  @State discovering: boolean = false;
 
   aboutToAppear(): void {
     this.load();
@@ -66,6 +69,26 @@ export struct DevicesScreen {
       this.runtimesError = (error as Error).message;
     } finally {
       this.runtimesLoading = false;
+    }
+  }
+
+  private async discoverRuntimes(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const selected: DeviceItem | null = this.selected;
+    if (session === null || selected === null || this.discovering) {
+      return;
+    }
+    this.discovering = true;
+    this.runtimesError = '';
+    try {
+      this.runtimeTypes = await this.devicesApi.discoverRuntimeTypes(session.serverUrl,
+        session.accessToken, selected.id);
+      promptAction.showToast({ message: `发现 ${this.runtimeTypes.length} 种运行时` });
+      await this.loadRuntimes(selected.id);
+    } catch (error) {
+      this.runtimesError = (error as Error).message;
+    } finally {
+      this.discovering = false;
     }
   }
 
@@ -275,6 +298,15 @@ export struct DevicesScreen {
               .fontWeight(FontWeight.Medium)
               .fontColor('#111111')
               .layoutWeight(1)
+            Button(this.discovering ? '发现中' : '发现')
+              .height(24)
+              .fontSize(10)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .enabled(!this.discovering)
+              .onClick(() => {
+                this.discoverRuntimes();
+              })
             Button('刷新')
               .height(24)
               .fontSize(10)
@@ -320,6 +352,28 @@ export struct DevicesScreen {
               .width('100%')
               .padding({ top: 4, bottom: 4 })
             }, (runtime: DeviceRuntimeItem) => runtime.runtimeId)
+          }
+
+          if (this.runtimeTypes.length > 0) {
+            Text('已发现的运行时类型')
+              .fontSize(12)
+              .fontColor('#8A8A8A')
+              .width('100%')
+            ForEach(this.runtimeTypes, (runtimeType: RuntimeTypeItem) => {
+              Row({ space: 6 }) {
+                Text(runtimeType.displayName)
+                  .fontSize(12)
+                  .fontColor('#111111')
+                  .layoutWeight(1)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                Text(runtimeType.available ? '可用' : (runtimeType.present ? '未就绪' : '未安装'))
+                  .fontSize(10)
+                  .fontColor(runtimeType.available ? '#1F7A1F' : '#8A8A8A')
+              }
+              .width('100%')
+              .padding({ top: 4, bottom: 4 })
+            }, (runtimeType: RuntimeTypeItem) => runtimeType.runtimeType)
           }
 
           if (!this.renameMode && !this.confirmDelete) {

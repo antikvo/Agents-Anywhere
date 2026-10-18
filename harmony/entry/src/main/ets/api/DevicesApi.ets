@@ -2,7 +2,7 @@ import { http } from '@kit.NetworkKit';
 import { apiUrl } from '../core/ServerUrl';
 import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE } from './HttpClient';
 import { ConnectorView, ConnectorsResponse } from './SessionDtos';
-import { DeviceRuntimeItem, DeviceRuntimeListResponse } from './DeviceRuntimeDtos';
+import { DeviceRuntimeItem, DeviceRuntimeListResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
 
 export interface ConnectorCreateResponse {
   connector: ConnectorView;
@@ -39,6 +39,18 @@ export class DevicesApi {
     const text: string = await this.client.requestJson(apiUrl(serverUrl, path), { token: token });
     const response: DeviceRuntimeListResponse = JSON.parse(text) as DeviceRuntimeListResponse;
     return response.runtimes;
+  }
+
+  async discoverRuntimeTypes(serverUrl: string, token: string,
+    connectorId: string): Promise<RuntimeTypeItem[]> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/runtime-types/discover`;
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      readTimeoutMs: 30000
+    });
+    const response: RuntimeTypeListResponse = JSON.parse(text) as RuntimeTypeListResponse;
+    return response.runtimeTypes;
   }
 
   async listConnectors(serverUrl: string, token: string): Promise<ConnectorsResponse> {

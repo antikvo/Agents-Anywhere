@@ -18,3 +18,21 @@ export interface DeviceRuntimeListResponse {
   runtimes: DeviceRuntimeItem[];
   serverTime: string;
 }
+
+export interface RuntimeTypeItem {
+  connectorId: string;
+  runtimeType: string;
+  displayName: string;
+  description?: string | null;
+  present: boolean;
+  available: boolean;
+  reason?: string | null;
+  recommended: boolean;
+  maxInstances?: number | null;
+}
+
+export interface RuntimeTypeListResponse {
+  connectorId: string;
+  runtimeTypes: RuntimeTypeItem[];
+  serverTime: string;
+}
