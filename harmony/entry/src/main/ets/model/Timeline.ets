@@ -30,6 +30,10 @@ export interface TimelineRow {
   body: string;
   reasoning: string;
   fileChanges: FileChange[];
+  mcpServer: string;
+  mcpTool: string;
+  mcpArguments: string;
+  markerLabel: string;
   status: string;
   timeLabel: string;
   attachments: AttachmentRefDto[];
@@ -78,6 +82,51 @@ function fileChangesOf(content: Object): FileChange[] {
     result.push({ path: path, diff: diff, kind: kind });
   });
   return result;
+}
+
+function mcpServerOf(content: Object): string {
+  if (typeof content === 'string') {
+    return '';
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  return fields.server === undefined || fields.server === null ? '' : fields.server;
+}
+
+function mcpToolOf(content: Object): string {
+  if (typeof content === 'string') {
+    return '';
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  return fields.tool === undefined || fields.tool === null ? '' : fields.tool;
+}
+
+function mcpArgumentsOf(content: Object): string {
+  if (typeof content === 'string') {
+    return '';
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  const args: Object | null | undefined = fields.arguments;
+  if (args === undefined || args === null) {
+    return '';
+  }
+  try {
+    return JSON.stringify(args);
+  } catch (error) {
+    return '';
+  }
+}
+
+function markerLabelOf(content: Object): string {
+  if (typeof content === 'string') {
+    return '';
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  const label: string | null | undefined = fields.label;
+  if (label !== undefined && label !== null && label.length > 0) {
+    return label;
+  }
+  const kind: string | null | undefined = fields.kind;
+  return kind === 'compact' ? '对话已压缩' : '';
 }
 
 function systemLabelOf(content: Object): string {
@@ -177,6 +226,10 @@ export function toTimelineRows(items: TimelineItemDto[]): TimelineRow[] {
       body: body,
       reasoning: rawContent !== null && systemLabelOf(rawContent) === 'reasoning' ? body : '',
       fileChanges: rawContent === null ? [] : fileChangesOf(rawContent),
+      mcpServer: rawContent === null ? '' : mcpServerOf(rawContent),
+      mcpTool: rawContent === null ? '' : mcpToolOf(rawContent),
+      mcpArguments: rawContent === null ? '' : mcpArgumentsOf(rawContent),
+      markerLabel: rawContent === null || item.type !== 'marker' ? '' : markerLabelOf(rawContent),
       status: item.status,
       timeLabel: timeLabel(item.createdAt),
       attachments: rawContent === null ? [] : contentAttachments(rawContent)

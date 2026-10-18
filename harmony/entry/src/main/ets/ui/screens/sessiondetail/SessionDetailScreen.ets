@@ -448,7 +448,8 @@ export struct SessionDetailScreen {
     } else if (row.kind === TimelineRowKind.ToolCall) {
       Column({ space: 6 }) {
         Row({ space: 6 }) {
-          Text(row.command.length > 0 ? `$ ${row.command}` : (row.title.length > 0 ? row.title : '工具调用'))
+          Text(row.mcpTool.length > 0 ? `MCP · ${row.mcpServer} · ${row.mcpTool}` :
+            (row.command.length > 0 ? `$ ${row.command}` : (row.title.length > 0 ? row.title : '工具调用')))
             .fontSize(12)
             .fontWeight(FontWeight.Medium)
             .fontFamily('monospace')
@@ -463,7 +464,19 @@ export struct SessionDetailScreen {
           }
         }
         .width('100%')
-        if (row.body.length > 0) {
+        if (row.mcpArguments.length > 0) {
+          Text(row.mcpArguments)
+            .fontSize(11)
+            .fontFamily('monospace')
+            .fontColor('#5A5A5A')
+            .maxLines(4)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+            .padding(8)
+            .borderRadius(6)
+            .backgroundColor('#E6E6E6')
+            .copyOption(CopyOptions.LocalDevice)
+        } else if (row.body.length > 0) {
           Text(row.body)
             .fontSize(12)
             .fontFamily('monospace')
@@ -533,7 +546,19 @@ export struct SessionDetailScreen {
       .borderRadius(10)
       .backgroundColor('#EFEFEF')
     } else {
-      if (row.reasoning.length > 0) {
+      if (row.markerLabel.length > 0) {
+        Row() {
+          Text(row.markerLabel)
+            .fontSize(10)
+            .fontColor('#8A8A8A')
+            .padding({ left: 10, right: 10, top: 3, bottom: 3 })
+            .borderRadius(10)
+            .backgroundColor('#F0F0F0')
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.Center)
+        .padding({ top: 6, bottom: 6 })
+      } else if (row.reasoning.length > 0) {
         Column({ space: 4 }) {
           Text('思考')
             .fontSize(10)
