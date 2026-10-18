@@ -3,6 +3,8 @@ import { SessionsController, SessionsLoadResult } from '../../../feature/session
 import { DashboardRealtimeController } from '../../../feature/sessions/DashboardRealtimeController';
 import { groupSessions, SessionGroup, SessionItem, statusColor } from '../../../model/Session';
 import { Notifications } from '../../../platform/Notifications';
+import { AnnouncementsApi, PublicAnnouncement } from '../../../api/AnnouncementsApi';
+import { MarkdownView } from '../../components/MarkdownView';
 import { DevicesScreen } from '../devices/DevicesScreen';
 
 /**
@@ -26,6 +28,7 @@ export struct SessionListScreen {
   private controller: SessionsController = new SessionsController();
   private dashboard: DashboardRealtimeController = new DashboardRealtimeController();
   private notifications: Notifications = new Notifications();
+  private readonly announcementsApi: AnnouncementsApi = new AnnouncementsApi();
   private knownUnread: Set<string> = new Set<string>();
   private unreadInitialized: boolean = false;
   @State sessions: SessionItem[] = [];
@@ -42,6 +45,9 @@ export struct SessionListScreen {
   @State showDevices: boolean = false;
   @State groups: SessionGroup[] = [];
   @State markingRead: boolean = false;
+  @State announcementMarkdown: string = '';
+  @State announcementAt: string = '';
+  @State announcementDismissed: boolean = false;
 
   onDeepLinkPropChanged(): void {
     this.tryConsumeDeepLink();
@@ -71,6 +77,7 @@ export struct SessionListScreen {
       this.liveConnected = connected;
     };
     this.reload();
+    this.loadAnnouncement();
     const session: AuthSession | null = this.session;
     if (session !== null) {
       this.dashboard.start(session);
@@ -134,6 +141,7 @@ export struct SessionListScreen {
   }
 
   private async reload(): Promise<void> {
+    this.loadAnnouncement();
     const session: AuthSession | null = this.session;
     if (session === null) {
       return;
@@ -150,6 +158,29 @@ export struct SessionListScreen {
       this.errorMessage = (error as Error).message;
     } finally {
       this.loading = false;
+    }
+  }
+
+  private async loadAnnouncement(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null) {
+      return;
+    }
+    try {
+      const announcement: PublicAnnouncement | null = await this.announcementsApi.current(
+        session.serverUrl, session.accessToken);
+      if (announcement === null || announcement.markdown.trim().length === 0) {
+        this.announcementMarkdown = '';
+        this.announcementAt = '';
+        return;
+      }
+      if (announcement.publishedAt !== this.announcementAt) {
+        this.announcementDismissed = false;
+      }
+      this.announcementMarkdown = announcement.markdown;
+      this.announcementAt = announcement.publishedAt;
+    } catch (error) {
+      this.announcementMarkdown = '';
     }
   }
 
@@ -355,6 +386,31 @@ export struct SessionListScreen {
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+
+      if (this.announcementMarkdown.length > 0 && !this.announcementDismissed) {
+        Column({ space: 6 }) {
+          Row({ space: 8 }) {
+            Text('公告')
+              .fontSize(12)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#B26B00')
+              .layoutWeight(1)
+            Text('关闭')
+              .fontSize(11)
+              .fontColor('#8A8A8A')
+              .onClick(() => {
+                this.announcementDismissed = true;
+              })
+          }
+          .width('100%')
+          MarkdownView({ content: this.announcementMarkdown })
+        }
+        .width('100%')
+        .padding({ left: 14, right: 14, top: 10, bottom: 10 })
+        .margin({ left: 16, right: 16, bottom: 8 })
+        .borderRadius(10)
+        .backgroundColor('#FFF8EC')
+      }
 
       Row({ space: 8 }) {
         Button('活跃')
