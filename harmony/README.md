@@ -73,10 +73,39 @@ harmony/
 - 版本号位于 `AppScope/app.json5` 的 `versionName` 与 `versionCode`，产品版本规则见 [docs/versioning.md](../docs/versioning.md)。
 - 不提交 `local.properties`、`oh_modules/`、`build/`、`.hvigor/` 与签名材料。
 
+## 本地联调
+
+1. 启动本地 Server 与数据库（仓库根目录）：
+
+```bash
+./local-up.sh
+```
+
+2. 在「设备」页添加设备，拿到一次性 token 后，在工作设备上启动 Connector：
+
+```bash
+cd connector
+uv run anywhere-cli start \
+  --server-url http://<你的局域网 IP>:8000 \
+  --connector-id <connectorId> \
+  --connector-token <connectorToken>
+```
+
+3. 客户端「设置 → 服务器」填同一个地址并登录（本地测试账号见 [docs/development.md](../docs/development.md)）。
+
+已在本机用上述方式验证：登录、会话列表/详情、实时 WS、Markdown、项目 CRUD、设备在线状态、文件目录与文本预览、终端创建/输入/resize。
+
 ## 验证
 
 ```bash
 hvigorw assembleHap --mode module -p module=entry@default -p product=default --no-daemon
+```
+
+模拟器安装与启动：
+
+```bash
+hdc install -r entry/build/default/outputs/default/entry-default-unsigned.hap
+hdc shell aa start -a EntryAbility -b com.agentsanywhere.harmony
 ```
 
 构建成功只说明可以编译；真机安装、推送、扫码、后台保活等需要在真机或模拟器上人工验证。

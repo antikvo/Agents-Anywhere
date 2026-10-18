@@ -85,12 +85,13 @@ export class FilesApi {
 
   async readText(serverUrl: string, token: string, connectorId: string, root: string,
     path: string): Promise<FsTextResult> {
-    const base: string = apiUrl(serverUrl,
-      `/connectors/${encodeURIComponent(connectorId)}/fs`);
     const query: string = `?root=${encodeURIComponent(root)}`;
+    const tokenBase: string = apiUrl(serverUrl,
+      `/connectors/${encodeURIComponent(connectorId)}/fs`);
+    const sharedBase: string = apiUrl(serverUrl, '/connectors/fs');
 
     const tokenRequest: ReadTextRequest = { path: path };
-    const tokenText: string = await this.client.requestJson(`${base}/preview-token${query}`, {
+    const tokenText: string = await this.client.requestJson(`${tokenBase}/preview-token${query}`, {
       method: HTTP_METHOD_POST,
       token: token,
       body: JSON.stringify(tokenRequest)
@@ -98,7 +99,7 @@ export class FilesApi {
     const preview: PreviewTokenResponse = JSON.parse(tokenText) as PreviewTokenResponse;
 
     const sessionRequest: PreviewTokenRequest = { previewToken: preview.previewToken };
-    const sessionText: string = await this.client.requestJson(`${base}/preview-session`, {
+    const sessionText: string = await this.client.requestJson(`${sharedBase}/preview-session`, {
       method: HTTP_METHOD_POST,
       body: JSON.stringify(sessionRequest)
     });
@@ -108,7 +109,7 @@ export class FilesApi {
       previewAccessToken: session.previewAccessToken,
       maxBytes: 1048576
     };
-    const readText: string = await this.client.requestJson(`${base}/preview/readText`, {
+    const readText: string = await this.client.requestJson(`${sharedBase}/preview/readText`, {
       method: HTTP_METHOD_POST,
       body: JSON.stringify(readRequest)
     });
