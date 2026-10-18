@@ -4,6 +4,11 @@ import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE, HT
 import { ConnectorView, ConnectorsResponse } from './SessionDtos';
 import { CreateRuntimeBody, DeviceRuntimeItem, DeviceRuntimeListResponse, ModelCatalogResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
 
+export interface ConnectorRevokeResult {
+  connectorToken: string;
+  tokenPrefix: string;
+}
+
 export interface ConnectorCreateResponse {
   connector: ConnectorView;
   connectorToken: string;
@@ -147,6 +152,17 @@ export class DevicesApi {
     });
     const response: ConnectorResponse = JSON.parse(text) as ConnectorResponse;
     return response.connector;
+  }
+
+  async revokeConnector(serverUrl: string, token: string, connectorId: string): Promise<string> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/revoke`;
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      body: '{}'
+    });
+    const response = JSON.parse(text) as ConnectorRevokeResult;
+    return response.connectorToken;
   }
 
   async deleteConnector(serverUrl: string, token: string, connectorId: string): Promise<void> {

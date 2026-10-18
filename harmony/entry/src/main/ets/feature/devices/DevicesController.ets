@@ -18,6 +18,10 @@ export class DevicesController {
     return await this.api.createConnector(session.serverUrl, session.accessToken, name.trim());
   }
 
+  async revoke(session: AuthSession, connectorId: string): Promise<string> {
+    return await this.api.revokeConnector(session.serverUrl, session.accessToken, connectorId);
+  }
+
   async rename(session: AuthSession, connectorId: string, name: string): Promise<void> {
     await this.api.updateConnector(session.serverUrl, session.accessToken, connectorId, name.trim());
   }

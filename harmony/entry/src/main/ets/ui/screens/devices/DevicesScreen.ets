@@ -26,6 +26,8 @@ export struct DevicesScreen {
   @State renameMode: boolean = false;
   @State renameText: string = '';
   @State confirmDelete: boolean = false;
+  @State confirmRevoke: boolean = false;
+  @State revokedToken: string = '';
   @State actionBusy: boolean = false;
   @State runtimes: DeviceRuntimeItem[] = [];
   @State runtimesLoading: boolean = false;
@@ -209,6 +211,27 @@ export struct DevicesScreen {
       await this.load();
     } catch (error) {
       this.createError = (error as Error).message;
+    } finally {
+      this.actionBusy = false;
+    }
+  }
+
+  private async revokeCredential(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const device: DeviceItem | null = this.selected;
+    if (session === null || device === null) {
+      return;
+    }
+    this.createError = '';
+    this.actionBusy = true;
+    try {
+      const token: string = await this.controller.revoke(session, device.id);
+      this.revokedToken = token;
+      this.confirmRevoke = false;
+      await this.load();
+    } catch (error) {
+      this.createError = (error as Error).message;
+      this.confirmRevoke = false;
     } finally {
       this.actionBusy = false;
     }
@@ -530,6 +553,14 @@ export struct DevicesScreen {
                     this.archiveDeviceName = this.selected.name;
                   }
                 })
+              Button('重置凭证')
+                .height(34)
+                .fontSize(12)
+                .backgroundColor('#FFF6E5')
+                .fontColor('#8A5300')
+                .onClick(() => {
+                  this.confirmRevoke = true;
+                })
               Button('删除')
                 .height(34)
                 .fontSize(13)
@@ -599,6 +630,76 @@ export struct DevicesScreen {
         .borderRadius(12)
         .backgroundColor('#FFFFFF')
       }
+      if (this.confirmRevoke) {
+        Column({ space: 10 }) {
+          Text('重置设备凭证')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text('重置后设备会立即断开，需要用新 token 重新启动 Connector。仅影响所选设备。')
+            .fontSize(12)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          Row({ space: 8 }) {
+            Button(this.actionBusy ? '重置中…' : '确认重置')
+              .height(34)
+              .fontSize(13)
+              .backgroundColor('#B26B00')
+              .fontColor('#FFFFFF')
+              .enabled(!this.actionBusy)
+              .onClick(() => {
+                this.revokeCredential();
+              })
+            Button('取消')
+              .height(34)
+              .fontSize(13)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.confirmRevoke = false;
+              })
+          }
+          .width('100%')
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
+      if (this.revokedToken.length > 0) {
+        Column({ space: 10 }) {
+          Text('新的设备凭证')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text(this.revokedToken)
+            .fontSize(11)
+            .fontFamily('monospace')
+            .fontColor('#111111')
+            .width('100%')
+            .copyOption(CopyOptions.LocalDevice)
+          Text('请立即复制并更新设备上的启动参数，关闭后不再显示。')
+            .fontSize(12)
+            .fontColor('#D93026')
+            .width('100%')
+          Button('关闭')
+            .height(34)
+            .fontSize(13)
+            .backgroundColor('#F2F2F2')
+            .fontColor('#111111')
+            .onClick(() => {
+              this.revokedToken = '';
+            })
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
       if (this.showAdd) {
         Column({ space: 10 }) {
           Row() {

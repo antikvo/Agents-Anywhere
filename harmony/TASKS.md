@@ -83,7 +83,7 @@
 | --- | --- | --- | --- | --- |
 | 设备列表与在线状态 | `ui/screens/devices/DevicesScreen.kt` | `GET /connectors` | `ui/screens/devices/DevicesScreen.ets` | ✅ 列表、状态、只读详情已接 |
 | 设备详情、重命名、删除、revoke | `DeviceDetailScreen.kt`、`DeviceActionsSheet.kt` | `GET/PATCH/DELETE /connectors/{id}`、`POST /revoke` | 同上 | 🔄 重命名/删除 UI + API 已接；revoke 未做 |
-| 设备凭证轮换与重新配对 | iOS `V2DeviceManagementService` | `POST /connectors/{id}/revoke`、pairing | `feature/devices/` | ⬜ |
+| 设备凭证轮换与重新配对 | iOS `V2DeviceManagementService` | `POST /connectors/{id}/revoke`、pairing | `api/DevicesApi.ets`、`ui/screens/devices/DevicesScreen.ets` | ✅ 设备页「重置凭证」（二次确认 → 新 token 弹层可复制）已接；已在离线设备上验证轮换成功，重新配对即用新 token 重启 Connector |
 | 添加设备配对流程（start/claim/poll + 命令展示） | `DevicePairingSteps.kt`、`DevicePairingFlow.kt` | `POST /connectors`（创建 + 一次性 token）、`/pairing/*` | `ui/screens/devices/DevicesScreen.ets` | 🔄 创建 Connector + 启动命令展示已接；浏览器配对码流程未做 |
 | Runtime 列表与配置（启动/停止/校验/偏好） | `DeviceRuntimeConfigureSheet.kt`、`DeviceRuntimeState.kt` | runtime catalog、`/connectors/{id}/preferences` | `api/DevicesApi.ets`、`DevicesScreen.ets` | 🔄 列表/发现/新建/移除/JSON 配置已接并验证；启动/停止/校验/偏好未做 |
 | 设备工作区列表 | `DeviceDetailControls.kt` | `GET /connectors/{id}/workspaces` | — | ⬜ 不适用：服务端未提供 workspaces 接口，工作区通过项目路径使用 |
