@@ -97,8 +97,8 @@
 | 路径栏（可编辑跳转、上一级、使用此目录回填） | `ios/Views/Devices/WorkspaceFilesSheet.swift` | `POST /fs/list` | `ui/screens/files/FilesScreen.ets` | 🔄 当前路径显示与返回上级已接；可编辑跳转与回填未做 |
 | Windows 盘符与 UNC 路径 | iOS `WorkspaceDirectoryModel` | `POST /fs/list`（空路径返回盘符） | `feature/files/PathModel.ets` | ⬜ |
 | 文本预览（一次性 token → **原生渲染**，不用 WebView） | `ios/Views/Devices/WorkspaceFilePreviewSheet.swift` | `POST /fs/preview-token`、`POST /fs/readText` | `api/FilesApi.ets`、`ui/screens/files/FilesScreen.ets` | ✅ 预览会话 + readText 原生渲染已在线验证（/tmp SQL 文件） |
-| 图片预览与缩放 | `FilesScreen.kt`、Telephoto Zoomable | `POST /fs/read` | `ui/screens/files/FilesScreen.ets`、`MarkdownView.ets` | 🔄 消息附件/Markdown 图片点击放大已接；文件浏览器内的图片预览未做 |
-| 下载（同源校验 + 字节数校验 + 保存/分享） | `ios/Business/V2WorkspaceFilesService.swift`、`WorkspaceFileExportPicker.swift` | `POST /fs/read` → `GET /fs/transfers/{id}` | `feature/files/TransferController.ets` | ⬜ |
+| 图片预览与缩放 | `FilesScreen.kt`、Telephoto Zoomable | `POST /fs/read` → `GET /fs/transfers/{id}` | `api/FilesApi.ets`（readBytesToCache）、`FilesScreen.ets`、`MarkdownView.ets` | ✅ 消息附件/Markdown 图片点击放大、文件浏览器图片原生预览（下载字节 + Image 渲染）均已验证；手势缩放未做 |
+| 下载（同源校验 + 字节数校验 + 保存/分享） | `ios/Business/V2WorkspaceFilesService.swift`、`WorkspaceFileExportPicker.swift` | `POST /fs/read` → `GET /fs/transfers/{id}` | `api/FilesApi.ets` | 🔄 fs/read → transfer 下载链路已接（图片预览复用）；保存到公共目录/分享未做 |
 | Markdown 内文件链接跳转（`#L12` / `:12:3`） | iOS `SessionFileReference` | — | `feature/files/FileLinkResolver.ets` | ⬜ |
 | 预览会话与分享链接 | `fs/preview-session` | `POST /fs/preview-session` | `api/FilesApi.ets` | ✅ preview-token → preview-session 流程已接并验证 |
 

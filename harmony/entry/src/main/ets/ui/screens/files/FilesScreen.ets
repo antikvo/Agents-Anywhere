@@ -1,4 +1,5 @@
 import { FilesApi, FsEntryDto, FsTextResult } from '../../../api/FilesApi';
+import { AppContextHolder } from '../../../core/AppContextHolder';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 
 /**
@@ -19,6 +20,9 @@ export struct FilesScreen {
   @State loading: boolean = true;
   @State errorMessage: string = '';
   @State preview: FsTextResult | null = null;
+  @State imagePath: string = '';
+  @State imageName: string = '';
+  @State imageLoading: boolean = false;
 
   aboutToAppear(): void {
     this.load('.');
@@ -57,6 +61,24 @@ export struct FilesScreen {
       return;
     }
     this.errorMessage = '';
+    const lower: string = entry.name.toLowerCase();
+    const isImage: boolean = lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') ||
+      lower.endsWith('.gif') || lower.endsWith('.webp') || lower.endsWith('.bmp');
+    if (isImage) {
+      this.imageLoading = true;
+      this.imagePath = '';
+      try {
+        const path: string = await this.api.readBytesToCache(session.serverUrl, session.accessToken,
+          this.connectorId, this.root, entry.name, AppContextHolder.require().cacheDir);
+        this.imageName = entry.name;
+        this.imagePath = `file://${path}`;
+      } catch (error) {
+        this.errorMessage = (error as Error).message;
+      } finally {
+        this.imageLoading = false;
+      }
+      return;
+    }
     try {
       this.preview = await this.api.readText(session.serverUrl, session.accessToken, this.connectorId,
         this.root, entry.name);
@@ -168,6 +190,48 @@ export struct FilesScreen {
       }
       .width('100%')
       .height('100%')
+
+      if (this.imageLoading) {
+        Column({ space: 8 }) {
+          LoadingProgress().width(32).height(32)
+          Text('正在下载图片…').fontSize(12).fontColor('#666666')
+        }
+        .padding(20)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
+      if (this.imagePath.length > 0) {
+        Column({ space: 10 }) {
+          Row() {
+            Text(this.imageName)
+              .fontSize(15)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#000000')
+              .layoutWeight(1)
+              .maxLines(1)
+            Button('关闭')
+              .height(28)
+              .fontSize(12)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.imagePath = '';
+                this.imageName = '';
+              })
+          }
+          .width('100%')
+          Image(this.imagePath)
+            .width('100%')
+            .layoutWeight(1)
+            .objectFit(ImageFit.Contain)
+        }
+        .width('92%')
+        .height('70%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
 
       if (this.preview !== null) {
         Column({ space: 10 }) {
