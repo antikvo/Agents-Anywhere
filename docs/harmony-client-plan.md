@@ -110,7 +110,7 @@ harmony/
 
 ## 里程碑
 
-工作量按周级区间估算，用于排期沟通，不作为承诺。逐项任务与验收标准见 [harmony/TASKS.md](../harmony/TASKS.md)。
+工作量按周级区间估算，用于排期沟通，不作为承诺。逐项任务与验收标准见 [harmony/TASKS.md](../harmony/TASKS.md)；真机安装后的逐项回归清单见 [harmony/README.md](../harmony/README.md#真机回归清单)。
 
 ### M0 · 骨架与基础设施
 
