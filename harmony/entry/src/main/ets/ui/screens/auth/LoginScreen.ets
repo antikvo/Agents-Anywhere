@@ -2,6 +2,9 @@ import { OFFICIAL_SERVER_URL } from '../../../core/AppConfig';
 import { AuthController } from '../../../feature/auth/AuthController';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { PendingMobileLogin, takePendingMobileLogin } from '../../../platform/DeepLinkPrefs';
+import { mobileLoginFromQrText, MobileLoginDeepLink } from '../../../core/DeepLink';
+import { scanBarcode } from '@kit.ScanKit';
+import { AppContextHolder } from '../../../core/AppContextHolder';
 
 /**
  * 登录页：服务器地址 + 邮箱 + 密码。
@@ -76,6 +79,30 @@ export struct LoginScreen {
       return parsed;
     } catch (error) {
       return null;
+    }
+  }
+
+  private async scanQr(): Promise<void> {
+    if (this.busy) {
+      return;
+    }
+    this.errorMessage = '';
+    try {
+      const result = await scanBarcode.startScanForResult(AppContextHolder.require());
+      const parsed: MobileLoginDeepLink | null = mobileLoginFromQrText(result.originalValue);
+      if (parsed === null) {
+        this.errorMessage = '二维码不是桌面端「手机连接」的登录码';
+        return;
+      }
+      this.qrUserId = parsed.userId;
+      this.qrToken = parsed.loginToken;
+      if (parsed.server.length > 0) {
+        this.serverUrl = parsed.server;
+      }
+      this.qrStatus = '已扫码，等待桌面端确认…';
+      await this.submitQr();
+    } catch (error) {
+      this.errorMessage = `扫码不可用：${(error as Error).message}`;
     }
   }
 
@@ -176,6 +203,15 @@ export struct LoginScreen {
         }
 
         if (this.qrMode) {
+          Button('扫描二维码')
+            .width('100%')
+            .height(44)
+            .backgroundColor('#F2F2F2')
+            .fontColor('#111111')
+            .enabled(!this.busy)
+            .onClick(() => {
+              this.scanQr();
+            })
           Button(this.busy ? '等待确认…' : '扫码登录')
             .width('100%')
             .height(48)

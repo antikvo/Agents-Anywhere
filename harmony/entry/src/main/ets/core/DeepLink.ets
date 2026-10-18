@@ -90,3 +90,34 @@ export function mobileLoginFromUri(uri: string): MobileLoginDeepLink | null {
   }
   return { userId: userId, loginToken: loginToken, server: server };
 }
+
+interface QrPayloadShape {
+  type?: string;
+  webUrl?: string;
+  userId?: string;
+  loginToken?: string;
+}
+
+/**
+ * 解析桌面端「手机连接」二维码的 JSON 文本：
+ * {"type":"agents-anywhere.mobile-login","userId":...,"loginToken":...,"webUrl":...}
+ */
+export function mobileLoginFromQrText(text: string): MobileLoginDeepLink | null {
+  const trimmed: string = text.trim();
+  if (trimmed.length === 0 || trimmed.charAt(0) !== '{') {
+    return null;
+  }
+  try {
+    const payload: QrPayloadShape = JSON.parse(trimmed) as QrPayloadShape;
+    const userId: string = payload.userId === undefined || payload.userId === null ? '' : payload.userId;
+    const loginToken: string = payload.loginToken === undefined || payload.loginToken === null ?
+      '' : payload.loginToken;
+    if (userId.length === 0 || loginToken.length === 0) {
+      return null;
+    }
+    const server: string = payload.webUrl === undefined || payload.webUrl === null ? '' : payload.webUrl;
+    return { userId: userId, loginToken: loginToken, server: server };
+  } catch (error) {
+    return null;
+  }
+}
