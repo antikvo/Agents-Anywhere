@@ -49,6 +49,8 @@ export struct SessionDetailScreen {
   @State commands: RuntimeCommand[] = [];
   @State commandsLoaded: boolean = false;
   @State showDetails: boolean = false;
+  @State showMultiSelect: boolean = false;
+  @State selectedRowIds: string[] = [];
   @State statusText: string = '';
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
@@ -144,6 +146,22 @@ export struct SessionDetailScreen {
     }
   }
 
+  private rowLabelOf(row: TimelineRow): string {
+    if (row.kind === TimelineRowKind.UserMessage) {
+      return '用户';
+    }
+    if (row.kind === TimelineRowKind.AgentMessage) {
+      return '助手';
+    }
+    if (row.kind === TimelineRowKind.ToolCall) {
+      return '工具';
+    }
+    if (row.kind === TimelineRowKind.Artifact) {
+      return '文件变更';
+    }
+    return '系统';
+  }
+
   private rowCopyText(row: TimelineRow): string {
     if (row.kind === TimelineRowKind.ToolCall) {
       const command: string = row.command.length > 0 ? `$ ${row.command}` : row.title;
@@ -153,6 +171,41 @@ export struct SessionDetailScreen {
       return row.body;
     }
     return row.title;
+  }
+
+  private toggleRowSelection(rowId: string): void {
+    const index: number = this.selectedRowIds.indexOf(rowId);
+    const next: string[] = this.selectedRowIds.slice();
+    if (index >= 0) {
+      next.splice(index, 1);
+    } else {
+      next.push(rowId);
+    }
+    this.selectedRowIds = next;
+  }
+
+  private selectedRowsText(): string {
+    const parts: string[] = [];
+    this.rows.forEach((row: TimelineRow) => {
+      if (this.selectedRowIds.indexOf(row.id) >= 0) {
+        const text: string = this.rowCopyText(row);
+        if (text.length > 0) {
+          parts.push(text);
+        }
+      }
+    });
+    return parts.join('\n\n');
+  }
+
+  private async copySelectedRows(): Promise<void> {
+    const text: string = this.selectedRowsText();
+    if (text.length === 0) {
+      promptAction.showToast({ message: '请先选择要复制的消息' });
+      return;
+    }
+    await this.copyText(text, `已复制 ${this.selectedRowIds.length} 条消息`);
+    this.showMultiSelect = false;
+    this.selectedRowIds = [];
   }
 
   private async copyText(text: string, label: string): Promise<void> {
@@ -499,6 +552,11 @@ export struct SessionDetailScreen {
             this.copyText(this.rowCopyText(row), '文本已复制');
           })
       }
+      MenuItem({ content: '多选复制' })
+        .onClick(() => {
+          this.selectedRowIds = [];
+          this.showMultiSelect = true;
+        })
       if (row.kind === TimelineRowKind.AgentMessage) {
         MenuItem({ content: '分享回复' })
           .onClick(() => {
@@ -1175,6 +1233,80 @@ export struct SessionDetailScreen {
         .borderRadius(12)
         .backgroundColor('#FFFFFF')
       }
+      if (this.showMultiSelect) {
+        Column({ space: 8 }) {
+          Row({ space: 8 }) {
+            Text(`多选复制（已选 ${this.selectedRowIds.length}）`)
+              .fontSize(15)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#000000')
+              .layoutWeight(1)
+            Text('关闭')
+              .fontSize(12)
+              .fontColor('#3A6FD8')
+              .onClick(() => {
+                this.showMultiSelect = false;
+                this.selectedRowIds = [];
+              })
+          }
+          .width('100%')
+          List({ space: 4 }) {
+            ForEach(this.rows, (row: TimelineRow) => {
+              ListItem() {
+                Row({ space: 8 }) {
+                  Text(this.selectedRowIds.indexOf(row.id) >= 0 ? '☑' : '☐')
+                    .fontSize(18)
+                    .fontColor(this.selectedRowIds.indexOf(row.id) >= 0 ? '#1F5FBF' : '#8A8A8A')
+                    .width(24)
+                  Column({ space: 2 }) {
+                    Text(this.rowLabelOf(row))
+                      .fontSize(10)
+                      .fontColor('#8A8A8A')
+                      .width('100%')
+                    Text(this.rowCopyText(row))
+                      .fontSize(11)
+                      .fontColor('#333333')
+                      .maxLines(2)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .width('100%')
+                  }
+                  .alignItems(HorizontalAlign.Start)
+                  .layoutWeight(1)
+                }
+                .width('100%')
+                .padding({ top: 6, bottom: 6 })
+                .onClick(() => {
+                  this.toggleRowSelection(row.id);
+                })
+              }
+            }, (row: TimelineRow) => `sel-${row.id}`)
+          }
+          .height(320)
+          .width('100%')
+          Row({ space: 8 }) {
+            Button('复制选中')
+              .height(34)
+              .enabled(this.selectedRowIds.length > 0)
+              .onClick(() => {
+                this.copySelectedRows();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.showMultiSelect = false;
+                this.selectedRowIds = [];
+              })
+          }
+          .width('100%')
+        }
+        .width('90%')
+        .padding(14)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
       if (this.showDetails) {
         Column({ space: 8 }) {
           Row({ space: 8 }) {
