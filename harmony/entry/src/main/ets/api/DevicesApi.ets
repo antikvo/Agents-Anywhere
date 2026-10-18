@@ -2,7 +2,7 @@ import { http } from '@kit.NetworkKit';
 import { apiUrl } from '../core/ServerUrl';
 import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE } from './HttpClient';
 import { ConnectorView, ConnectorsResponse } from './SessionDtos';
-import { DeviceRuntimeItem, DeviceRuntimeListResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
+import { CreateRuntimeBody, DeviceRuntimeItem, DeviceRuntimeListResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
 
 export interface ConnectorCreateResponse {
   connector: ConnectorView;
@@ -51,6 +51,36 @@ export class DevicesApi {
     });
     const response: RuntimeTypeListResponse = JSON.parse(text) as RuntimeTypeListResponse;
     return response.runtimeTypes;
+  }
+
+  async createRuntime(serverUrl: string, token: string, connectorId: string, runtimeType: string,
+    name: string): Promise<DeviceRuntimeItem> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/runtimes`;
+    const config: Record<string, Object> = {};
+    const payload: CreateRuntimeBody = {
+      runtimeType: runtimeType,
+      name: name,
+      config: config,
+      active: false
+    };
+    const body: string = JSON.stringify(payload);
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      body: body,
+      readTimeoutMs: 30000
+    });
+    return JSON.parse(text) as DeviceRuntimeItem;
+  }
+
+  async deleteRuntimeConfig(serverUrl: string, token: string,
+    connectorId: string, runtimeId: string): Promise<void> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/runtimes/` +
+      `${encodeURIComponent(runtimeId)}/config`;
+    await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_DELETE,
+      token: token
+    });
   }
 
   async listConnectors(serverUrl: string, token: string): Promise<ConnectorsResponse> {

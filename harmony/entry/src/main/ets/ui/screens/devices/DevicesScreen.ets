@@ -32,6 +32,12 @@ export struct DevicesScreen {
   @State runtimesError: string = '';
   @State runtimeTypes: RuntimeTypeItem[] = [];
   @State discovering: boolean = false;
+  @State addRuntimeType: string = '';
+  @State addRuntimeTypeName: string = '';
+  @State addRuntimeName: string = '';
+  @State deleteRuntimeId: string = '';
+  @State deleteRuntimeName: string = '';
+  @State runtimeBusy: boolean = false;
 
   aboutToAppear(): void {
     this.load();
@@ -89,6 +95,49 @@ export struct DevicesScreen {
       this.runtimesError = (error as Error).message;
     } finally {
       this.discovering = false;
+    }
+  }
+
+  private async createRuntime(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const selected: DeviceItem | null = this.selected;
+    if (session === null || selected === null || this.runtimeBusy ||
+      this.addRuntimeName.trim().length === 0) {
+      return;
+    }
+    this.runtimeBusy = true;
+    this.runtimesError = '';
+    try {
+      await this.devicesApi.createRuntime(session.serverUrl, session.accessToken, selected.id,
+        this.addRuntimeType, this.addRuntimeName.trim());
+      promptAction.showToast({ message: '运行时实例已创建' });
+      this.addRuntimeType = '';
+      await this.loadRuntimes(selected.id);
+    } catch (error) {
+      this.runtimesError = (error as Error).message;
+    } finally {
+      this.runtimeBusy = false;
+    }
+  }
+
+  private async deleteRuntime(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const selected: DeviceItem | null = this.selected;
+    if (session === null || selected === null || this.runtimeBusy || this.deleteRuntimeId.length === 0) {
+      return;
+    }
+    this.runtimeBusy = true;
+    this.runtimesError = '';
+    try {
+      await this.devicesApi.deleteRuntimeConfig(session.serverUrl, session.accessToken, selected.id,
+        this.deleteRuntimeId);
+      promptAction.showToast({ message: '运行时实例已移除' });
+      this.deleteRuntimeId = '';
+      await this.loadRuntimes(selected.id);
+    } catch (error) {
+      this.runtimesError = (error as Error).message;
+    } finally {
+      this.runtimeBusy = false;
     }
   }
 
@@ -348,6 +397,14 @@ export struct DevicesScreen {
                   .fontSize(10)
                   .fontColor(runtime.status === 'ready' || runtime.status === 'running' ?
                     '#1F7A1F' : '#8A8A8A')
+                Text('移除')
+                  .fontSize(10)
+                  .fontColor('#D93026')
+                  .padding({ left: 8 })
+                  .onClick(() => {
+                    this.deleteRuntimeId = runtime.runtimeId;
+                    this.deleteRuntimeName = runtime.name;
+                  })
               }
               .width('100%')
               .padding({ top: 4, bottom: 4 })
@@ -370,6 +427,15 @@ export struct DevicesScreen {
                 Text(runtimeType.available ? '可用' : (runtimeType.present ? '未就绪' : '未安装'))
                   .fontSize(10)
                   .fontColor(runtimeType.available ? '#1F7A1F' : '#8A8A8A')
+                Text('添加')
+                  .fontSize(10)
+                  .fontColor('#111111')
+                  .padding({ left: 8 })
+                  .onClick(() => {
+                    this.addRuntimeType = runtimeType.runtimeType;
+                    this.addRuntimeTypeName = runtimeType.displayName;
+                    this.addRuntimeName = `${runtimeType.displayName} 实例`;
+                  })
               }
               .width('100%')
               .padding({ top: 4, bottom: 4 })
@@ -524,6 +590,85 @@ export struct DevicesScreen {
         .borderRadius(12)
         .backgroundColor('#FFFFFF')
       }
+
+      if (this.addRuntimeType.length > 0) {
+        Column({ space: 10 }) {
+          Text(`添加 ${this.addRuntimeTypeName} 实例`)
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          TextInput({ placeholder: '实例名称', text: this.addRuntimeName })
+            .height(40)
+            .fontSize(14)
+            .backgroundColor('#F5F5F5')
+            .borderRadius(8)
+            .onChange((value: string) => {
+              this.addRuntimeName = value;
+            })
+          Text('使用默认配置创建；创建后可在客户端继续配置模型与权限。')
+            .fontSize(11)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          Row({ space: 8 }) {
+            Button(this.runtimeBusy ? '创建中…' : '创建')
+              .height(34)
+              .enabled(!this.runtimeBusy && this.addRuntimeName.trim().length > 0)
+              .onClick(() => {
+                this.createRuntime();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.addRuntimeType = '';
+              })
+          }
+          .width('100%')
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
+      if (this.deleteRuntimeId.length > 0) {
+        Column({ space: 10 }) {
+          Text('移除运行时实例')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Text(`确认移除「${this.deleteRuntimeName}」？该实例上的活跃会话将无法继续。`)
+            .fontSize(12)
+            .fontColor('#8A8A8A')
+            .width('100%')
+          Row({ space: 8 }) {
+            Button(this.runtimeBusy ? '移除中…' : '确认移除')
+              .height(34)
+              .backgroundColor('#D93026')
+              .fontColor('#FFFFFF')
+              .enabled(!this.runtimeBusy)
+              .onClick(() => {
+                this.deleteRuntime();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.deleteRuntimeId = '';
+              })
+          }
+          .width('100%')
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
     }
     .width('100%')
     .height('100%')

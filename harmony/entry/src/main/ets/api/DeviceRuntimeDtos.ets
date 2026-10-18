@@ -36,3 +36,10 @@ export interface RuntimeTypeListResponse {
   runtimeTypes: RuntimeTypeItem[];
   serverTime: string;
 }
+
+export interface CreateRuntimeBody {
+  runtimeType: string;
+  name: string;
+  config: Record<string, Object>;
+  active: boolean;
+}
