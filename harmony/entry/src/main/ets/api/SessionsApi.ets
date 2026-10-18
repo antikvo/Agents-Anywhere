@@ -1,7 +1,7 @@
 import { http } from '@kit.NetworkKit';
 import { apiUrl } from '../core/ServerUrl';
 import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH } from './HttpClient';
-import { SessionSnapshotResponse, TimelineResponse } from './ProtocolDtos';
+import { SessionSnapshotResponse, TimelineItemDto, TimelineResponse } from './ProtocolDtos';
 import { SessionView, SessionsPageResponse } from './SessionDtos';
 
 const DEFAULT_LIMIT: number = 100;
@@ -87,6 +87,42 @@ export class SessionsApi {
   /**
    * 标记已读。服务端要求 body 是裸 JSON 数组。
    */
+  /**
+   * 导出完整时间线：按 history 模式从新到旧翻页，返回按时间升序的条目。
+   */
+  async exportTimeline(serverUrl: string, token: string,
+    sessionId: string): Promise<TimelineItemDto[]> {
+    const collected: TimelineItemDto[] = [];
+    let beforeOrderSeq: number = 0;
+    for (let page = 0; page < 100; page++) {
+      let path: string = `/sessions/${encodeURIComponent(sessionId)}/timeline?mode=history&limit=500`;
+      if (beforeOrderSeq > 0) {
+        path += `&beforeOrderSeq=${beforeOrderSeq}`;
+      }
+      const text: string = await this.client.requestJson(apiUrl(serverUrl, path), { token: token });
+      const response: TimelineResponse = JSON.parse(text) as TimelineResponse;
+      response.items.forEach((item: TimelineItemDto) => {
+        collected.push(item);
+      });
+      if (!response.hasMore || response.items.length === 0) {
+        break;
+      }
+      let minSeq: number = 0;
+      response.items.forEach((item: TimelineItemDto) => {
+        if (minSeq === 0 || item.orderSeq < minSeq) {
+          minSeq = item.orderSeq;
+        }
+      });
+      if (minSeq <= 1) {
+        break;
+      }
+      beforeOrderSeq = minSeq;
+    }
+    collected.sort((left: TimelineItemDto, right: TimelineItemDto) =>
+    left.orderSeq - right.orderSeq);
+    return collected;
+  }
+
   async syncSession(serverUrl: string, token: string, sessionId: string): Promise<void> {
     const path: string = `/sessions/${encodeURIComponent(sessionId)}/sync`;
     await this.client.requestJson(apiUrl(serverUrl, path), {

@@ -18,6 +18,8 @@ import { TerminalScreen } from '../terminal/TerminalScreen';
 import { FilesScreen } from '../files/FilesScreen';
 import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
 import { FileChange } from '../../../model/Timeline';
+import { TimelineItemDto } from '../../../api/ProtocolDtos';
+
 import { pasteboard } from '@kit.BasicServicesKit';
 import { camera, cameraPicker } from '@kit.CameraKit';
 import { AppContextHolder } from '../../../core/AppContextHolder';
@@ -26,6 +28,13 @@ import { RuntimeCommand } from '../../../api/CommandsApi';
 import { promptAction } from '@kit.ArkUI';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { fileIo } from '@kit.CoreFileKit';
+
+interface ExportPayload {
+  sessionId: string;
+  exportedAt: string;
+  count: number;
+  items: TimelineItemDto[];
+}
 
 /**
  * 会话详情：快照 + WS 实时 + 审批/输入请求卡片 + 发送消息。
@@ -108,6 +117,39 @@ export struct SessionDetailScreen {
     this.statusText = statusLabel(nextStatus);
     this.statusTint = statusColor(nextStatus);
     this.takeover = session.takeover;
+  }
+
+  private async exportTimeline(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const initial: SessionItem | null = this.initial;
+    if (session === null || initial === null || this.actionBusy) {
+      return;
+    }
+    this.actionBusy = true;
+    this.actionError = '';
+    try {
+      const items: TimelineItemDto[] = await this.controller.exportTimeline(session, initial.id);
+      const payload: ExportPayload = {
+        sessionId: initial.id,
+        exportedAt: new Date().toISOString(),
+        count: items.length,
+        items: items
+      };
+      const dir: string = AppContextHolder.require().filesDir;
+      const path: string = `${dir}/session-${initial.id}.json`;
+      const file = fileIo.openSync(path,
+        fileIo.OpenMode.WRITE_ONLY | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC);
+      try {
+        fileIo.writeSync(file.fd, JSON.stringify(payload));
+      } finally {
+        fileIo.closeSync(file);
+      }
+      promptAction.showToast({ message: `已导出 ${items.length} 条：${path}` });
+    } catch (error) {
+      this.actionError = (error as Error).message;
+    } finally {
+      this.actionBusy = false;
+    }
   }
 
   private async syncNow(): Promise<void> {
@@ -993,6 +1035,12 @@ export struct SessionDetailScreen {
               value: '重新同步',
               action: () => {
                 this.syncNow();
+              }
+            },
+            {
+              value: '导出时间线',
+              action: () => {
+                this.exportTimeline();
               }
             },
             {
