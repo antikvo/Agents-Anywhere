@@ -111,7 +111,7 @@
 | resize 与软键盘 | `TerminalController.kt` | terminal resize 帧 | `feature/terminal/` | 🔄 resize 帧已接；软键盘自适应未做 |
 | 多终端标签 | `TerminalScreen.kt` | — | `ui/screens/terminal/TerminalScreen.ets` | ✅ 标签切换 + 新建已在线验证 |
 | 后台长时任务保活 | `RemoteTerminalForegroundService.kt` | — | `platform/BackgroundTask.ets` | ⬜ |
-| 断线重连 | `RemoteTerminalController.kt` | — | `feature/terminal/TerminalController.ets` | 🔄 手动「重连」已接；自动退避重试与 fromSeq 续传未做 |
+| 断线重连 | `RemoteTerminalController.kt` | — | `feature/terminal/TerminalController.ets` | 🔄 手动重连 + 自动退避（0.5s→8s，最多 6 次）+ fromSeq 续传已接；断线时屏幕缓冲保留已实测（服务重启导致终端丢失时只能新建） |
 | 快捷键面板、清屏、Ctrl/Alt 锁存 | `TerminalScreen.kt` | — | `ui/screens/terminal/` | ⬜ |
 
 ## 6. 设置与平台能力

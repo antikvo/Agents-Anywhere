@@ -26,6 +26,9 @@ export class TerminalController {
   private sessionId: string = '';
   private buffers: Map<string, TerminalBuffer> = new Map<string, TerminalBuffer>();
   private lastSeq: number = 0;
+  private connectToken: number = 0;
+  private closedByUser: boolean = true;
+  private retryAttempt: number = 0;
   buffer: TerminalBuffer = new TerminalBuffer(80, 30);
   onUpdate: () => void = () => {
   };
@@ -70,6 +73,7 @@ export class TerminalController {
     if (session === null) {
       return;
     }
+    this.closedByUser = true;
     this.ws?.close();
     this.ws = null;
     this.terminal = terminal;
@@ -102,22 +106,32 @@ export class TerminalController {
     if (terminal === null || session === null) {
       return;
     }
+    this.closedByUser = true;
     this.ws?.close();
     this.ws = null;
+    this.retryAttempt = 0;
     this.onStatus('重连中');
     this.connect(session, this.sessionId, terminal.terminalId);
   }
 
   private connect(session: AuthSession, sessionId: string, terminalId: string): void {
-    const wsUrl: string = this.streamUrl(session.serverUrl, sessionId, terminalId, session.accessToken);
+    this.closedByUser = false;
+    this.connectToken++;
+    const token: number = this.connectToken;
+    const wsUrl: string = this.streamUrl(session.serverUrl, sessionId, terminalId,
+      session.accessToken, this.lastSeq);
     const socket: webSocket.WebSocket = webSocket.createWebSocket();
     this.ws = socket;
     socket.on('open', () => {
+      if (token !== this.connectToken) {
+        return;
+      }
+      this.retryAttempt = 0;
       this.onStatus('已连接');
       this.sendResize(this.buffer.cols, this.buffer.rows);
     });
     socket.on('message', (err: Object, value: string | ArrayBuffer) => {
-      if (typeof value !== 'string') {
+      if (token !== this.connectToken || typeof value !== 'string') {
         return;
       }
       try {
@@ -141,23 +155,51 @@ export class TerminalController {
       }
     });
     socket.on('close', () => {
-      this.onStatus('连接已关闭');
+      if (token !== this.connectToken || this.closedByUser) {
+        this.onStatus('连接已关闭');
+        return;
+      }
+      this.scheduleReconnect(session, sessionId, terminalId);
     });
     socket.on('error', () => {
-      this.onStatus('连接错误');
+      if (token !== this.connectToken || this.closedByUser) {
+        this.onStatus('连接错误');
+      }
     });
     socket.connect(wsUrl);
   }
 
-  private streamUrl(serverUrl: string, sessionId: string, terminalId: string, token: string): string {
+  private scheduleReconnect(session: AuthSession, sessionId: string, terminalId: string): void {
+    if (this.closedByUser) {
+      return;
+    }
+    if (this.retryAttempt >= 6) {
+      this.onStatus('连接断开（重连次数已达上限）');
+      return;
+    }
+    this.retryAttempt++;
+    const delay: number = Math.min(8000, 500 * Math.pow(2, this.retryAttempt - 1));
+    this.onStatus(`连接断开，${Math.round(delay / 1000)}s 后重连 (${this.retryAttempt}/6)`);
+    setTimeout(() => {
+      if (this.closedByUser) {
+        return;
+      }
+      this.onStatus('重连中…');
+      this.connect(session, sessionId, terminalId);
+    }, delay);
+  }
+
+  private streamUrl(serverUrl: string, sessionId: string, terminalId: string, token: string,
+    fromSeq: number = 0): string {
     let base: string = serverUrl;
     if (base.startsWith('https://')) {
       base = 'wss://' + base.substring(8);
     } else if (base.startsWith('http://')) {
       base = 'ws://' + base.substring(7);
     }
+    const from: string = fromSeq > 0 ? `&fromSeq=${fromSeq}` : '';
     const path: string = `/api/v2/sessions/${encodeURIComponent(sessionId)}/terminals/` +
-      `${encodeURIComponent(terminalId)}/stream?token=${encodeURIComponent(token)}`;
+      `${encodeURIComponent(terminalId)}/stream?token=${encodeURIComponent(token)}${from}`;
     return base + path;
   }
 
@@ -180,6 +222,7 @@ export class TerminalController {
   }
 
   async close(): Promise<void> {
+    this.closedByUser = true;
     const session: AuthSession | null = this.session;
     const terminal: TerminalView | null = this.terminal;
     this.ws?.close();
