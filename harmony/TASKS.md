@@ -17,13 +17,13 @@
 | 扫码登录（生成二维码 / 轮询 / 交换） | `android/ui/screens/auth/QrAuthScreens.kt` | `POST /auth/mobile-login/qr`、`/request`、`/status`、`/exchange` | `api/AuthApi.ets`、`feature/auth/AuthController.ets`、`ui/screens/auth/LoginScreen.ets`、`core/DeepLink.ets` | 🔄 扫码登录流程（桌面二维码内容经深链/手动 userId+token 填入 → request → 轮询 → exchange）已接并端到端验证；摄像头扫码未做 |
 | 注册与首位管理员（setup token） | `android/ui/screens/auth/AuthScreens.kt` | `POST /auth/register`、`GET /auth/config` | `ui/screens/auth/RegisterScreen.ets` | ⬜ |
 | OAuth 登录（PKCE + 深链回调） | `android/feature/auth/WebLoginViewModel.kt` | `GET /auth/oauth/start`、`/auth/oauth/callback`、`POST /auth/oauth/finalize` | `platform/OAuth`、`feature/auth/OAuthController.ets` | ⬜ |
-| token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ⬜ |
-| 账号资料：头像、昵称、邮箱绑定、改密 | `android/ui/screens/profile/*` | `GET /auth/me`、`PUT /auth/me/profile`、`/avatar`、`/email`、`POST /auth/change-password` | `ui/screens/profile/` | ⬜ |
+| token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ⬜ 当前与 Android 一致用 preferences 明文；真机前建议接 Asset Store Kit |
+| 账号资料：头像、昵称、邮箱绑定、改密 | `android/ui/screens/profile/*` | `GET /auth/me`、`PUT /auth/me/profile`、`POST /auth/change-password` | `ui/screens/profile/SettingsScreen.ets` | 🔄 昵称修改/改密已接并验证；服务端 `PUT /auth/me/profile` 只接受 displayName，头像/邮箱绑定无接口（不适用） |
 | 应用内检查更新 | Android `feature/update/AppUpdateViewModel.kt` | `GET /health` 版本比较 | `core/Version.ets`、`ui/screens/profile/SettingsScreen.ets` | 🔄 设置页「检查更新」按服务端版本提示已是最新/可更新并验证；下载与安装流程未做（HarmonyOS 需签名与上架） |
 | 公告与公告门 | `android/ui/screens/announcements/AnnouncementGate.kt` | `GET /announcement` | `api/AnnouncementsApi.ets`、`ui/screens/home/SessionListScreen.ets` | 🔄 首页公告横幅（Markdown + 关闭、刷新同步）已接并验证；强制确认的公告门未做 |
 | WebSocket 客户端与 ws-ticket 鉴权 | `android/feature/realtime/*` | `POST /ws-ticket`、`GET /sessions/{id}/ws`、dashboard ws | `api/RealtimeClient.ets` | 🔄 会话 WS 已通（订阅/重连/补拉已接），dashboard WS 未接 |
 | 事件合批、去重与补拉 | `SessionRealtimeController.kt`、`RealtimeRetry.kt` | 34ms / 100 条合批、eventId LRU 去重、`events?after=` | `feature/realtime/` | 🔄 `events?after=` 补拉与 timeline/meta 事件合并已接，合批去重未接 |
-| 主题、语言、隐私政策 | `android/ui/screens/profile/*` | — | `ui/designsystem/` | ⬜ |
+| 主题、语言、隐私政策 | `android/ui/screens/profile/*` | — | `ui/screens/profile/SettingsScreen.ets` | 🔄 外观跟随系统（`COLOR_MODE_NOT_SET`）与隐私说明文案已接；深色主题切换、多语言与隐私政策页未做 |
 
 ## 1. 会话列表与项目
 
@@ -139,7 +139,7 @@
 | --- | --- | --- | --- |
 | 协议类型生成 + `--check` | `web-next/scripts/generate-protocol-types.mjs` | `harmony/scripts/` | ⬜ |
 | 单元测试：URL 规范化、VT 解析、Markdown、reducer | Android 单测、iOS `Tests/ClientCoreTests` | `entry/src/ohosTest/` | ✅ 17 个用例（版本比较 / URL 规范化 / VT 解析 / Markdown）已在模拟器跑通；reducer 单测未做 |
-| 构建 CI job（不阻塞其他端） | `.github/workflows/ci.yml` | `.github/workflows/` | ⬜ |
+| 构建 CI job（不阻塞其他端） | `.github/workflows/ci.yml` | `harmony/scripts/verify.sh` | ⬜ 本地校验脚本已提供（构建主/测试 HAP，可选跑单测）；GitHub runner 无 DevEco SDK，未接 CI |
 | 模拟器回归清单 | — | `harmony/README.md` | 🔄 核心链路已在模拟器逐项验证；清单见 README「验证」 |
 | 真机回归（安装、扫码、推送、后台、终端） | — | `harmony/README.md` 的「真机回归清单」 | ⬜ 清单已写好，由项目所有者执行 |
 | 应用市场打包、隐私声明、权限清单 | — | `harmony/` | ⬜ |

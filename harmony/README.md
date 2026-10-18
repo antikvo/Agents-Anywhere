@@ -159,6 +159,13 @@ hdc shell aa test -b com.agentsanywhere.harmony -m entry_test -s unittest OpenHa
 ## 验证
 
 ```bash
+# 一条命令完成主 HAP + 测试 HAP 构建（可加 RUN_TESTS=1 在已连接设备上跑单测）
+./scripts/verify.sh
+```
+
+或手动只构建主 HAP：
+
+```bash
 hvigorw assembleHap --mode module -p module=entry@default -p product=default --no-daemon
 ```
 
