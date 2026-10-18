@@ -92,23 +92,16 @@ export class SessionsApi {
    */
   async exportTimeline(serverUrl: string, token: string,
     sessionId: string): Promise<TimelineItemDto[]> {
-    const collected: TimelineItemDto[] = [];
-    let beforeOrderSeq: number = 0;
-    for (let page = 0; page < 100; page++) {
-      let path: string = `/sessions/${encodeURIComponent(sessionId)}/timeline?mode=history&limit=500`;
-      if (beforeOrderSeq > 0) {
-        path += `&beforeOrderSeq=${beforeOrderSeq}`;
-      }
-      const text: string = await this.client.requestJson(apiUrl(serverUrl, path), { token: token });
-      const response: TimelineResponse = JSON.parse(text) as TimelineResponse;
-      response.items.forEach((item: TimelineItemDto) => {
-        collected.push(item);
-      });
-      if (!response.hasMore || response.items.length === 0) {
-        break;
-      }
+    const byId: Map<string, TimelineItemDto> = new Map<string, TimelineItemDto>();
+    let path: string = `/sessions/${encodeURIComponent(sessionId)}/timeline?mode=latest&limit=500`;
+    let response: TimelineResponse = JSON.parse(
+      await this.client.requestJson(apiUrl(serverUrl, path), { token: token })) as TimelineResponse;
+    response.items.forEach((item: TimelineItemDto) => {
+      byId.set(item.id, item);
+    });
+    for (let page = 0; page < 100 && response.hasMore; page++) {
       let minSeq: number = 0;
-      response.items.forEach((item: TimelineItemDto) => {
+      byId.forEach((item: TimelineItemDto) => {
         if (minSeq === 0 || item.orderSeq < minSeq) {
           minSeq = item.orderSeq;
         }
@@ -116,8 +109,18 @@ export class SessionsApi {
       if (minSeq <= 1) {
         break;
       }
-      beforeOrderSeq = minSeq;
+      path = `/sessions/${encodeURIComponent(sessionId)}/timeline?mode=history&limit=500` +
+        `&beforeOrderSeq=${minSeq}`;
+      response = JSON.parse(
+        await this.client.requestJson(apiUrl(serverUrl, path), { token: token })) as TimelineResponse;
+      response.items.forEach((item: TimelineItemDto) => {
+        byId.set(item.id, item);
+      });
+      if (response.items.length === 0) {
+        break;
+      }
     }
+    const collected: TimelineItemDto[] = Array.from(byId.values());
     collected.sort((left: TimelineItemDto, right: TimelineItemDto) =>
     left.orderSeq - right.orderSeq);
     return collected;

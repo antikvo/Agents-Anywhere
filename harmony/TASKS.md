@@ -71,7 +71,7 @@
 | 会话内文件面板 | `SessionAgentFilesScreen.kt` | fs 端点 | `ui/screens/sessiondetail/SessionDetailScreen.ets`（复用 FilesScreen） | ✅ 详情「更多 → 文件」以会话 cwd 浏览已在线验证 |
 | 本轮文件审阅（+A/−D 汇总、逐文件 diff） | `ios/Views/Chat/SessionTurnReviewSheet.swift` | timeline 变更数据 | `ui/screens/sessiondetail/TurnReviewSheet.ets` | ⬜ |
 | 会话详情 sheet（ID、workspace、状态、条目数、待回应交互） | `ios/Views/Chat/SessionDetailsSheet.swift` | 快照字段 | `ui/screens/sessiondetail/SessionDetailScreen.ets` | ✅ 详情「更多 → 会话详情」展示 ID/工作区/状态/条目数/待回应/接管已在线验证 |
-| 会话时间线 JSON 导出（memory / remote 分页） | `ios/Business/V2SessionExportService.swift` | `GET /sessions/{id}/timeline?mode=history&beforeOrderSeq=` | `api/SessionsApi.ets`（exportTimeline）、`SessionDetailScreen.ets` | 🔄 详情「导出时间线」按 history 模式翻页、排序后写入应用 files 目录并提示路径；UI 路径与文件落盘待复测 |
+| 会话时间线 JSON 导出（memory / remote 分页） | `ios/Business/V2SessionExportService.swift` | `GET /sessions/{id}/timeline?mode=latest/history&beforeOrderSeq=` | `api/SessionsApi.ets`（exportTimeline）、`SessionDetailScreen.ets` | ✅ 详情「导出时间线」：latest 首页 + history 向前翻页、按 id 去重、orderSeq 排序后写入 files 目录；已在模拟器导出 133 条（65 KB）并校验文件 |
 | 会话分享链接 | `android/api/SessionsApi.kt`（`createSessionShare`） | `POST /sessions/{id}/shares` | `api/SessionsApi.ets`、`SessionDetailScreen.ets` | ✅ 会话与单条回复分享均已在线验证 |
 | steer（运行中注入消息）与 sync（Connector 重同步） | `ios/Business/V2RuntimeInteractionService` | `POST /runtime/steer`、`POST /sessions/{id}/sync` | `api/SessionsApi.ets`、`SessionDetailScreen.ets` | 🔄 详情「重新同步」已接（`session.sync` API 200 验证）；steer 未接 |
 | 离线缓存与冷启动恢复（会话列表/时间线落盘） | `ios/Repositories/V2LocalStore.swift`、`V2RestorationStore.swift` | — | `platform/CacheStore.ets`、`SessionListScreen.ets` | 🔄 会话列表缓存 + 离线标签已在线验证；时间线缓存未做 |
