@@ -471,6 +471,18 @@ export class SessionDetailController {
     }
   }
 
+  /**
+   * 运行中且未接管时，composer 发送走 steer（注入当前 turn），否则走普通消息。
+   */
+  async steer(content: string): Promise<void> {
+    const session: AuthSession | null = this.currentSession;
+    if (session === null) {
+      return;
+    }
+    await this.sessionsApi.steerSession(session.serverUrl, session.accessToken,
+      this.currentSessionId, content);
+  }
+
   async sendMessage(content: string): Promise<void> {
     const session: AuthSession | null = this.currentSession;
     if (session === null) {

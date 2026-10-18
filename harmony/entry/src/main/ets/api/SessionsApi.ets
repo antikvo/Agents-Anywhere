@@ -168,6 +168,20 @@ export class SessionsApi {
   /**
    * 发送用户消息。离线 Connector 时服务端会返回 409。
    */
+  async steerSession(serverUrl: string, token: string, sessionId: string,
+    content: string): Promise<void> {
+    const path: string = `/sessions/${encodeURIComponent(sessionId)}/runtime/steer`;
+    const payload: string = JSON.stringify({
+      content: content,
+      attachments: []
+    });
+    await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      body: payload
+    });
+  }
+
   async sendMessage(serverUrl: string, token: string, sessionId: string, content: string,
     clientMessageId: string, fileIds: string[] = []): Promise<void> {
     const path: string = `/sessions/${encodeURIComponent(sessionId)}/runtime/messages`;

@@ -6,7 +6,7 @@ import {
 } from '../../../feature/sessiondetail/SessionDetailController';
 import { NoticeActionDto, NoticeDto, RuntimeStateDto } from '../../../api/ProtocolDtos';
 import { SessionView } from '../../../api/SessionDtos';
-import { SessionItem, statusColor, statusLabel, toStatusKind } from '../../../model/Session';
+import { SessionItem, SessionStatusKind, statusColor, statusLabel, toStatusKind } from '../../../model/Session';
 import { TimelineRow, TimelineRowKind } from '../../../model/Timeline';
 import { MarkdownView } from '../../components/MarkdownView';
 import { AttachmentImage } from '../../components/AttachmentImage';
@@ -61,6 +61,7 @@ export struct SessionDetailScreen {
   @State showMultiSelect: boolean = false;
   @State selectedRowIds: string[] = [];
   @State statusText: string = '';
+  @State statusKind: SessionStatusKind = SessionStatusKind.Idle;
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
   @State notices: NoticeDto[] = [];
@@ -114,6 +115,7 @@ export struct SessionDetailScreen {
       this.title = nextTitle;
     }
     const nextStatus = toStatusKind(session.status);
+    this.statusKind = nextStatus;
     this.statusText = statusLabel(nextStatus);
     this.statusTint = statusColor(nextStatus);
     this.takeover = session.takeover;
@@ -324,8 +326,9 @@ export struct SessionDetailScreen {
       const nextTitle: string = result.session.title === null || result.session.title === undefined ?
         '' : result.session.title;
       this.title = nextTitle.length > 0 ? nextTitle : initial.title;
-      this.statusText = statusLabel(toStatusKind(result.session.status));
-      this.statusTint = statusColor(toStatusKind(result.session.status));
+      this.statusKind = toStatusKind(result.session.status);
+      this.statusText = statusLabel(this.statusKind);
+      this.statusTint = statusColor(this.statusKind);
       this.rows = result.rows;
       this.notices = result.notices;
       this.takeover = result.session.takeover;
@@ -393,8 +396,13 @@ export struct SessionDetailScreen {
     }
     this.actionBusy = true;
     this.actionError = '';
+    const steerMode: boolean = this.statusKind === SessionStatusKind.Running;
     try {
-      await this.controller.sendMessage(content);
+      if (steerMode) {
+        await this.controller.steer(content);
+      } else {
+        await this.controller.sendMessage(content);
+      }
       this.draft = '';
       if (initial !== null) {
         await this.drafts.clear(initial.id);
