@@ -5,6 +5,7 @@ import { Notifications } from '../../../platform/Notifications';
 import { compareVersions } from '../../../core/Version';
 import { AuthApi } from '../../../api/AuthApi';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
+import { APPEARANCE_DARK, APPEARANCE_LIGHT, APPEARANCE_SYSTEM, AppearanceStore } from '../../../platform/AppearanceStore';
 
 /**
  * 设置页：账号、服务器、版本、外观说明与退出登录。
@@ -40,10 +41,28 @@ export struct SettingsScreen {
   @State confirmPassword: string = '';
   @State saving: boolean = false;
   @State notificationsEnabled: boolean = false;
+  @State showAppearance: boolean = false;
+  @State appearanceLabel: string = '跟随系统';
+  private readonly appearanceStore: AppearanceStore = new AppearanceStore();
 
   aboutToAppear(): void {
     this.load();
     this.refreshNotificationState();
+    this.loadAppearance();
+  }
+
+  private async loadAppearance(): Promise<void> {
+    const mode: string = await this.appearanceStore.load();
+    this.appearanceLabel = mode === APPEARANCE_DARK ? '深色' :
+      mode === APPEARANCE_LIGHT ? '浅色' : '跟随系统';
+    await this.appearanceStore.restore();
+  }
+
+  private async chooseAppearance(mode: string): Promise<void> {
+    this.showAppearance = false;
+    this.appearanceLabel = mode === APPEARANCE_DARK ? '深色' :
+      mode === APPEARANCE_LIGHT ? '浅色' : '跟随系统';
+    await this.appearanceStore.apply(mode);
   }
 
   private async checkUpdate(): Promise<void> {
@@ -365,7 +384,24 @@ export struct SettingsScreen {
               .width('100%')
               .padding({ top: 20 })
             this.infoRow('客户端', 'Agents Anywhere HarmonyOS')
-            this.infoRow('外观', '跟随系统')
+            Row() {
+              Text('外观')
+                .fontSize(13)
+                .fontColor('#8A8A8A')
+                .width(72)
+              Text(this.appearanceLabel)
+                .fontSize(14)
+                .fontColor('#111111')
+                .layoutWeight(1)
+              Text('修改 ›')
+                .fontSize(13)
+                .fontColor('#8A8A8A')
+            }
+            .width('100%')
+            .padding({ top: 12, bottom: 12 })
+            .onClick(() => {
+              this.showAppearance = true;
+            })
             Text('隐私说明：会话内容、时间线与附件可能经过你连接的服务端；自托管时数据由你自己的实例处理。')
               .fontSize(12)
               .fontColor('#8A8A8A')
@@ -491,9 +527,57 @@ export struct SettingsScreen {
         .borderRadius(12)
         .backgroundColor('#FFFFFF')
       }
+
+      if (this.showAppearance) {
+        Column({ space: 10 }) {
+          Text('外观模式')
+            .fontSize(15)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          Button('跟随系统')
+            .width('100%')
+            .height(38)
+            .backgroundColor(this.appearanceLabel === '跟随系统' ? '#111111' : '#F2F2F2')
+            .fontColor(this.appearanceLabel === '跟随系统' ? '#FFFFFF' : '#111111')
+            .onClick(() => {
+              this.chooseAppearance(APPEARANCE_SYSTEM);
+            })
+          Button('浅色')
+            .width('100%')
+            .height(38)
+            .backgroundColor(this.appearanceLabel === '浅色' ? '#111111' : '#F2F2F2')
+            .fontColor(this.appearanceLabel === '浅色' ? '#FFFFFF' : '#111111')
+            .onClick(() => {
+              this.chooseAppearance(APPEARANCE_LIGHT);
+            })
+          Button('深色')
+            .width('100%')
+            .height(38)
+            .backgroundColor(this.appearanceLabel === '深色' ? '#111111' : '#F2F2F2')
+            .fontColor(this.appearanceLabel === '深色' ? '#FFFFFF' : '#111111')
+            .onClick(() => {
+              this.chooseAppearance(APPEARANCE_DARK);
+            })
+          Button('取消')
+            .width('100%')
+            .height(34)
+            .backgroundColor('#F7F7F7')
+            .fontColor('#333333')
+            .onClick(() => {
+              this.showAppearance = false;
+            })
+        }
+        .width('84%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
     }
     .width('100%')
     .height('100%')
     .alignContent(Alignment.Center)
+
+
   }
 }

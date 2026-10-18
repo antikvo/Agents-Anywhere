@@ -122,7 +122,7 @@
 | 任务 | 蓝本 | 落位 | 状态 |
 | --- | --- | --- | --- |
 | 账号设置（头像、昵称、邮箱、改密、角色） | iOS `AccountSettingsSheet.swift`、Android `ui/screens/profile/*` | `ui/screens/profile/SettingsScreen.ets` | 🔄 只读展示已接（昵称/邮箱/角色/服务器/版本/隐私/退出）；编辑类未做 |
-| 外观 System/Light/Dark | iOS `AppAppearance` | `core/AppearanceStore.ets` | 🔄 当前跟随系统（`COLOR_MODE_NOT_SET`）；手动切换未做 |
+| 外观 System/Light/Dark | iOS `AppAppearance` | `core/AppearanceStore.ets` | `platform/AppearanceStore.ets`、`SettingsScreen.ets` | 🔄 设置页「外观」可切换跟随系统/浅色/深色并通过 `setColorMode` 生效、偏好持久化；页面内颜色仍为硬编码，深色下内容区未跟随 |
 | 项目模式开关 / 紧凑会话列表 | iOS `ProjectSidebarPreferences` | `feature/sessions/` | ⬜ |
 | 服务器状态、地址展示与复制 | iOS `SettingsServerView` | `ui/screens/profile/SettingsScreen.ets` | ✅ 地址展示已接；复制按钮未做 |
 | 隐私政策、关于（版本 / 开源声明） | iOS `PrivacyPolicySheet`、`SettingsAboutView` | `ui/screens/profile/` | 🔄 设置页关于/版本/隐私说明已接；独立隐私政策页未做 |
