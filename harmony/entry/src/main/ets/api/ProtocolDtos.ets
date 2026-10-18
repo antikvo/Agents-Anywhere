@@ -102,4 +102,6 @@ export interface TimelineContentFields {
   kind?: string | null;
   title?: string | null;
   subtitle?: string | null;
+  changes?: Object[] | null;
+  path?: string | null;
 }

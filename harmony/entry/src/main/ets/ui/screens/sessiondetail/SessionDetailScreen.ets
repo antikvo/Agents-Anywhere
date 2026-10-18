@@ -16,6 +16,7 @@ import { InputAnswersPayload, InputRequestForm, parseInputRequest } from '../../
 import { InputRequestCard } from '../../components/InputRequestCard';
 import { TerminalScreen } from '../terminal/TerminalScreen';
 import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
+import { FileChange } from '../../../model/Timeline';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { fileIo } from '@kit.CoreFileKit';
 
@@ -482,8 +483,73 @@ export struct SessionDetailScreen {
       .margin({ left: 16, right: 16, top: 4, bottom: 4 })
       .borderRadius(10)
       .backgroundColor('#EFEFEF')
+    } else if (row.kind === TimelineRowKind.Artifact) {
+      Column({ space: 6 }) {
+        Row({ space: 6 }) {
+          Text('文件变更')
+            .fontSize(12)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#3A3A3A')
+          if (row.status.length > 0 && row.status !== 'done') {
+            Text(row.status)
+              .fontSize(10)
+              .fontColor('#8A8A8A')
+          }
+        }
+        .width('100%')
+        ForEach(row.fileChanges, (change: FileChange) => {
+          Column({ space: 4 }) {
+            if (change.path.length > 0) {
+              Text(change.path)
+                .fontSize(11)
+                .fontFamily('monospace')
+                .fontColor('#5A5A5A')
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .width('100%')
+            }
+            if (change.diff.length > 0) {
+              Text(change.diff)
+                .fontSize(11)
+                .fontFamily('monospace')
+                .fontColor('#3A3A3A')
+                .maxLines(12)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .width('100%')
+                .padding(8)
+                .borderRadius(6)
+                .backgroundColor('#FFFFFF')
+                .copyOption(CopyOptions.LocalDevice)
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .width('100%')
+        }, (change: FileChange, index: number) => `change-${row.id}-${index}`)
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+      .padding(12)
+      .margin({ left: 16, right: 16, top: 4, bottom: 4 })
+      .borderRadius(10)
+      .backgroundColor('#EFEFEF')
     } else {
-      if (row.body.length > 0 || row.systemLabel.length > 0) {
+      if (row.reasoning.length > 0) {
+        Column({ space: 4 }) {
+          Text('思考')
+            .fontSize(10)
+            .fontColor('#9A9A9A')
+          Text(row.reasoning)
+            .fontSize(11)
+            .fontStyle(FontStyle.Italic)
+            .fontColor('#8A8A8A')
+            .maxLines(6)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+        }
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 4, bottom: 4 })
+      } else if (row.body.length > 0 || (row.systemLabel.length > 0 && row.systemLabel !== 'reasoning')) {
         Text(row.body.length > 0 ? row.body : row.systemLabel)
           .fontSize(11)
           .fontColor('#8A8A8A')

@@ -11,7 +11,14 @@ export enum TimelineRowKind {
   UserMessage = 'user_message',
   AgentMessage = 'agent_message',
   ToolCall = 'tool_call',
-  SystemNotice = 'system_notice'
+  SystemNotice = 'system_notice',
+  Artifact = 'artifact'
+}
+
+export interface FileChange {
+  path: string;
+  diff: string;
+  kind: string;
 }
 
 export interface TimelineRow {
@@ -21,6 +28,8 @@ export interface TimelineRow {
   command: string;
   systemLabel: string;
   body: string;
+  reasoning: string;
+  fileChanges: FileChange[];
   status: string;
   timeLabel: string;
   attachments: AttachmentRefDto[];
@@ -33,6 +42,42 @@ function commandOf(content: Object): string {
   const fields: TimelineContentFields = content as TimelineContentFields;
   const command: string | null | undefined = fields.command;
   return command === undefined || command === null ? '' : command;
+}
+
+interface RawChangeKind {
+  type?: string;
+  move_path?: string | null;
+}
+
+interface RawChange {
+  path?: string | null;
+  diff?: string | null;
+  kind?: RawChangeKind | null;
+}
+
+function fileChangesOf(content: Object): FileChange[] {
+  if (typeof content === 'string') {
+    return [];
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  const rawChanges: Object[] = fields.changes === undefined || fields.changes === null ?
+    [] : fields.changes;
+  const basePath: string = fields.path === undefined || fields.path === null ? '' : fields.path;
+  const result: FileChange[] = [];
+  rawChanges.forEach((item: Object) => {
+    const change: RawChange = item as RawChange;
+    const diff: string = change.diff === undefined || change.diff === null ? '' : change.diff;
+    const path: string = change.path === undefined || change.path === null ? basePath : change.path;
+    let kind: string = 'update';
+    if (change.kind !== undefined && change.kind !== null) {
+      const rawKind: RawChangeKind = change.kind;
+      if (rawKind.type !== undefined && rawKind.type !== null && rawKind.type.length > 0) {
+        kind = rawKind.type;
+      }
+    }
+    result.push({ path: path, diff: diff, kind: kind });
+  });
+  return result;
 }
 
 function systemLabelOf(content: Object): string {
@@ -84,6 +129,9 @@ function contentAttachments(content: Object): AttachmentRefDto[] {
 }
 
 function kindOf(item: TimelineItemDto): TimelineRowKind {
+  if (item.type === 'artifact') {
+    return TimelineRowKind.Artifact;
+  }
   if (item.type === 'tool' || item.role === 'tool') {
     return TimelineRowKind.ToolCall;
   }
@@ -127,6 +175,8 @@ export function toTimelineRows(items: TimelineItemDto[]): TimelineRow[] {
       command: kind === TimelineRowKind.ToolCall && rawContent !== null ? commandOf(rawContent) : '',
       systemLabel: rawContent === null ? '' : systemLabelOf(rawContent),
       body: body,
+      reasoning: rawContent !== null && systemLabelOf(rawContent) === 'reasoning' ? body : '',
+      fileChanges: rawContent === null ? [] : fileChangesOf(rawContent),
       status: item.status,
       timeLabel: timeLabel(item.createdAt),
       attachments: rawContent === null ? [] : contentAttachments(rawContent)
