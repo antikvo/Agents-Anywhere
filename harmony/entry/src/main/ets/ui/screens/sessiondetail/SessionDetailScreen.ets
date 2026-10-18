@@ -423,22 +423,33 @@ export struct SessionDetailScreen {
     } else if (row.kind === TimelineRowKind.ToolCall) {
       Column({ space: 6 }) {
         Row({ space: 6 }) {
-          Text(row.title.length > 0 ? row.title : '工具调用')
+          Text(row.command.length > 0 ? `$ ${row.command}` : (row.title.length > 0 ? row.title : '工具调用'))
             .fontSize(12)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#5A5A5A')
-          if (row.status.length > 0) {
+            .fontFamily('monospace')
+            .fontColor('#3A3A3A')
+            .layoutWeight(1)
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          if (row.status.length > 0 && row.status !== 'done') {
             Text(row.status)
               .fontSize(10)
               .fontColor('#8A8A8A')
           }
         }
+        .width('100%')
         if (row.body.length > 0) {
           Text(row.body)
             .fontSize(12)
+            .fontFamily('monospace')
             .fontColor('#5A5A5A')
             .maxLines(8)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+            .padding(8)
+            .borderRadius(6)
+            .backgroundColor('#E6E6E6')
+            .copyOption(CopyOptions.LocalDevice)
         }
       }
       .alignItems(HorizontalAlign.Start)

@@ -18,10 +18,20 @@ export interface TimelineRow {
   id: string;
   kind: TimelineRowKind;
   title: string;
+  command: string;
   body: string;
   status: string;
   timeLabel: string;
   attachments: AttachmentRefDto[];
+}
+
+function commandOf(content: Object): string {
+  if (typeof content === 'string') {
+    return '';
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  const command: string | null | undefined = fields.command;
+  return command === undefined || command === null ? '' : command;
 }
 
 function contentText(content: Object): string {
@@ -29,8 +39,8 @@ function contentText(content: Object): string {
     return content as string;
   }
   const fields: TimelineContentFields = content as TimelineContentFields;
-  const candidates: (string | null | undefined)[] = [fields.text, fields.message, fields.rawText,
-    fields.output, fields.command];
+  const candidates: (string | null | undefined)[] = [fields.output, fields.text, fields.message,
+    fields.rawText, fields.command];
   for (let i = 0; i < candidates.length; i++) {
     const value: string | null | undefined = candidates[i];
     if (value !== undefined && value !== null && value.length > 0) {
@@ -104,6 +114,7 @@ export function toTimelineRows(items: TimelineItemDto[]): TimelineRow[] {
       id: item.id,
       kind: kind,
       title: kind === TimelineRowKind.ToolCall && rawContent !== null ? toolTitle(rawContent) : '',
+      command: kind === TimelineRowKind.ToolCall && rawContent !== null ? commandOf(rawContent) : '',
       body: body,
       status: item.status,
       timeLabel: timeLabel(item.createdAt),
