@@ -52,7 +52,7 @@
 | 时间线状态与 reducer 语义 | `SessionDetailState.kt`、`SessionDetailReducer.kt`、`SessionTimelineProjection.kt` | 事件协议 | `feature/sessiondetail/` | ⬜ |
 | 时间线事件渲染全集（用户/assistant/工具/系统/错误/审批/输入请求/git/notice） | `ui/screens/sessiondetail/SessionMessages.kt` | 事件协议 | `model/Timeline.ets`、`model/ProtocolMessages.ets`、`SessionDetailScreen.ets` | ✅ 用户/assistant/tool(command/mcp)/system/notice/问答/reasoning/marker/artifact 已在线验证；git 专项事件与 artifact 交互（打开文件）待补 |
 | 流式增量渲染与合并 | `SessionMessages.kt`、`SessionTimelineState.kt` | 事件协议 | `feature/sessiondetail/StreamingMerger.ets` | ⬜ |
-| Markdown 渲染（标题/嵌套列表/代码块/引用/行内强调/表格/图片） | `ui/screens/sessiondetail/AgentMarkdownText.kt`、`ios/Views/Chat/Markdown/*` | — | `ui/components/MarkdownView.ets` | ✅ 全部首版已接；图片点击放大、加载失败占位待补 |
+| Markdown 渲染（标题/嵌套列表/代码块/引用/行内强调/表格/图片） | `ui/screens/sessiondetail/AgentMarkdownText.kt`、`ios/Views/Chat/Markdown/*` | — | `ui/components/MarkdownView.ets` | ✅ 全部首版已接，代码块「查看/全屏预览+复制」已在线验证；图片点击放大、加载失败占位待补 |
 | 代码块与 Diff 预览 | `CodeBlockPreview.kt`、`DiffPreviewParser.kt` | — | `ui/components/CodeBlockView.ets` | ⬜ |
 | 附件：图片查看、文件上传/下载、相机拍照 | `AttachmentImages.kt`、`SessionCameraCapture.kt`、`SessionAttachmentTransfer.kt` | `POST /sessions/{id}/attachments`、`GET .../attachments/{fileId}`（返回 contentBase64） | `ui/components/AttachmentImage.ets`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 图片查看 + multipart 上传（相册选图）已接；下载/相机/非图片预览未做 |
 | 输入框：文本、附件、命令建议、草稿持久化、发送 | `SessionComposer.kt`、`SessionComposerDraftStore.kt` | `POST /sessions/{id}/runtime/messages` | `SessionDetailScreen.ets`、`platform/SessionDraftStore.ets` | 🔄 文本发送、附件选图上传、待发附件 chip、按会话草稿持久化（跨进程恢复）已接并验证；命令建议未做 |

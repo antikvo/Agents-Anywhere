@@ -14,6 +14,9 @@ import {
 @Component
 export struct MarkdownView {
   content: string = '';
+  @State showCodePreview: boolean = false;
+  @State codePreviewText: string = '';
+  @State codePreviewLanguage: string = '';
 
   @Builder
   inlineView(text: string, fontSize: number, color: string) {
@@ -43,18 +46,29 @@ export struct MarkdownView {
         .margin({ top: 8, bottom: 2 })
     } else if (block.kind === MarkdownBlockKind.Code) {
       Column({ space: 4 }) {
-        if (block.language.length > 0) {
-          Text(block.language)
+        Row({ space: 8 }) {
+          Text(block.language.length > 0 ? block.language : '代码')
             .fontSize(10)
             .fontColor('#8A8A8A')
-            .width('100%')
+            .layoutWeight(1)
+          Text('查看')
+            .fontSize(10)
+            .fontColor('#3A6FD8')
+            .onClick(() => {
+              this.codePreviewText = block.text;
+              this.codePreviewLanguage = block.language;
+              this.showCodePreview = true;
+            })
         }
+        .width('100%')
         Text(block.text)
           .fontSize(12)
           .fontFamily('monospace')
           .fontColor('#111111')
           .lineHeight(18)
           .width('100%')
+          .maxLines(12)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
@@ -143,12 +157,56 @@ export struct MarkdownView {
   }
 
   build() {
-    Column({ space: 2 }) {
-      ForEach(parseMarkdown(this.content), (block: MarkdownBlock, index: number) => {
-        this.blockView(block)
-      }, (block: MarkdownBlock, index: number) => `${index}`)
+    Stack() {
+      Column({ space: 2 }) {
+        ForEach(parseMarkdown(this.content), (block: MarkdownBlock, index: number) => {
+          this.blockView(block)
+        }, (block: MarkdownBlock, index: number) => `${index}`)
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+
+      if (this.showCodePreview) {
+        Column({ space: 10 }) {
+          Row({ space: 8 }) {
+            Text(this.codePreviewLanguage.length > 0 ? this.codePreviewLanguage : '代码')
+              .fontSize(15)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#000000')
+              .layoutWeight(1)
+            Text('关闭')
+              .fontSize(12)
+              .fontColor('#3A6FD8')
+              .onClick(() => {
+                this.showCodePreview = false;
+              })
+          }
+          .width('100%')
+          Scroll() {
+            Text(this.codePreviewText)
+              .fontSize(12)
+              .fontFamily('monospace')
+              .fontColor('#111111')
+              .lineHeight(18)
+              .width('100%')
+              .copyOption(CopyOptions.LocalDevice)
+          }
+          .height(360)
+          .width('100%')
+          .padding(10)
+          .borderRadius(8)
+          .backgroundColor('#F5F5F5')
+          .align(Alignment.TopStart)
+        }
+        .width('90%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+        .shadow({ radius: 24, color: '#33000000' })
+      }
     }
     .width('100%')
-    .alignItems(HorizontalAlign.Start)
+    .height(this.showCodePreview ? '100%' : undefined)
+    .alignContent(Alignment.Center)
   }
 }
