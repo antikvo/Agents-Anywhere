@@ -37,6 +37,21 @@
             "actions": [
               "action.system.home"
             ]
+          },
+          {
+            "actions": [
+              "ohos.want.action.viewData"
+            ],
+            "uris": [
+              {
+                "scheme": "agentsanywhere",
+                "host": "session"
+              },
+              {
+                "scheme": "agentsanywhere",
+                "host": "sessions"
+              }
+            ]
           }
         ]
       }

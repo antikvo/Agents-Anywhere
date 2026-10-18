@@ -127,7 +127,7 @@
 | 中英文（i18n） | Android `res/values*/strings.xml` | `core/i18n/` | ⬜ |
 | 推送（Push Kit）：审批到达通知 | 两端都未实现 | `platform/PushService.ets` | ⬜ |
 | 审批实况窗 | 两端都未实现 | `platform/LiveView.ets` | ⬜ |
-| 深链 / 分享（Share Kit、App Linking） | — | `platform/DeepLink.ets` | ⬜ |
+| 深链 / 分享（Share Kit、App Linking） | — | `agentsanywhere://session/<sessionId>`、`?sessionId=` | `core/DeepLink.ets`、`platform/DeepLinkPrefs.ets`、`pages/Index.ets` | 🔄 冷/热启动深链跳转会话已接并验证；Share Kit 分享面板与 App Linking 校验未做 |
 | 相机拍照发图（`cameraPicker`） | Android `SessionCameraCapture.kt`、iOS `PhotosPicker` | `platform/CameraPicker.ets` | ⬜ |
 
 ## 7. 质量与发布

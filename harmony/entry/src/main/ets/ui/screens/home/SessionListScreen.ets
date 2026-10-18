@@ -19,6 +19,9 @@ export struct SessionListScreen {
   };
   onOpenSettings: () => void = () => {
   };
+  @Prop @Watch('onDeepLinkPropChanged') pendingDeepLink: string = '';
+  onDeepLinkConsumed: () => void = () => {
+  };
   private controller: SessionsController = new SessionsController();
   private dashboard: DashboardRealtimeController = new DashboardRealtimeController();
   @State sessions: SessionItem[] = [];
@@ -34,6 +37,25 @@ export struct SessionListScreen {
   @State query: string = '';
   @State showDevices: boolean = false;
   @State groups: SessionGroup[] = [];
+
+  onDeepLinkPropChanged(): void {
+    this.tryConsumeDeepLink();
+  }
+
+  private tryConsumeDeepLink(): void {
+    const target: string = this.pendingDeepLink;
+    if (target.length === 0) {
+      return;
+    }
+    for (let i = 0; i < this.allSessions.length; i++) {
+      const item: SessionItem = this.allSessions[i];
+      if (item.id === target) {
+        this.onDeepLinkConsumed();
+        this.onOpenSession(item);
+        return;
+      }
+    }
+  }
 
   aboutToAppear(): void {
     this.dashboard.onSessions = (items: SessionItem[]) => {
@@ -72,6 +94,7 @@ export struct SessionListScreen {
     });
     this.sessions = visible;
     this.groups = groupSessions(visible);
+    this.tryConsumeDeepLink();
   }
 
   private async reload(): Promise<void> {

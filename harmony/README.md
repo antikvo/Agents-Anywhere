@@ -67,6 +67,18 @@ harmony/
   build-profile.json5           # 产品与 SDK 版本、签名配置
 ```
 
+## 深链
+
+- 打开会话：`agentsanywhere://session/<sessionId>`（`sessions` 亦可）。
+- 也支持任意 URL 上的 `?sessionId=<sessionId>`。
+- 冷启动与热启动都会直接跳到会话详情：
+
+```bash
+hdc shell aa start -A ohos.want.action.viewData \
+  -U "agentsanywhere://session/ses_test_1" \
+  -a EntryAbility -b com.agentsanywhere.harmony
+```
+
 ## 约定
 
 - 分层规则见 [ARCHITECTURE.md](ARCHITECTURE.md)。

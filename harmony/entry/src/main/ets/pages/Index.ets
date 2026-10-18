@@ -7,6 +7,8 @@ import { SessionListScreen } from '../ui/screens/home/SessionListScreen';
 import { SessionDetailScreen } from '../ui/screens/sessiondetail/SessionDetailScreen';
 import { SettingsScreen } from '../ui/screens/profile/SettingsScreen';
 import { ProjectsScreen } from '../ui/screens/projects/ProjectsScreen';
+import { takePendingSession } from '../platform/DeepLinkPrefs';
+import { emitter } from '@kit.BasicServicesKit';
 
 @Entry
 @Component
@@ -18,9 +20,45 @@ struct Index {
   @State selectedSession: SessionItem | null = null;
   @State showSettings: boolean = false;
   @State showProjects: boolean = false;
+  @State pendingDeepLink: string = '';
+  @LocalStorageProp('deeplinkSessionId') @Watch('onDeepLinkChanged') deepLinkSessionId: string = '';
 
   aboutToAppear(): void {
+    this.consumeDeepLink();
+    emitter.on({ eventId: 1001 }, () => {
+      this.consumeDeepLink();
+    });
     this.restoreSession();
+  }
+
+  aboutToDisappear(): void {
+    emitter.off(1001);
+  }
+
+  onPageShow(): void {
+    this.consumeDeepLink();
+  }
+
+  private async consumeDeepLink(): Promise<void> {
+    let target: string = await takePendingSession();
+    let attempt: number = 0;
+    while (target.length === 0 && attempt < 4) {
+      attempt++;
+      await new Promise<void>((resolve: () => void) => {
+        setTimeout(resolve, 150);
+      });
+      target = await takePendingSession();
+    }
+    if (target.length > 0) {
+      this.pendingDeepLink = target;
+      this.selectedSession = null;
+      this.showSettings = false;
+      this.showProjects = false;
+    }
+  }
+
+  onDeepLinkChanged(): void {
+    this.consumeDeepLink();
   }
 
   private async restoreSession(): Promise<void> {
@@ -124,6 +162,10 @@ struct Index {
           accountLabel: this.accountLabel,
           onSignOut: () => {
             this.signOut();
+          },
+          pendingDeepLink: this.pendingDeepLink,
+          onDeepLinkConsumed: () => {
+            this.pendingDeepLink = '';
           },
           onOpenSession: (item: SessionItem) => {
             this.selectedSession = item;
