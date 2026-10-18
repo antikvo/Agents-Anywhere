@@ -25,6 +25,9 @@ export struct TerminalScreen {
   @State terminals: TerminalView[] = [];
   @State currentTerminalId: string = '';
   @State scrollLabel: string = '';
+  @State ctrlLatch: boolean = false;
+  @State altLatch: boolean = false;
+  @State showKeys: boolean = false;
 
   aboutToAppear(): void {
     this.controller.onUpdate = () => {
@@ -135,12 +138,27 @@ export struct TerminalScreen {
   }
 
   private sendInput(): void {
-    const text: string = this.inputLine;
+    let text: string = this.inputLine;
     if (text.length === 0) {
       return;
     }
+    if (this.ctrlLatch && text.length === 1) {
+      const code: number = text.toUpperCase().charCodeAt(0);
+      if (code >= 64 && code <= 95) {
+        text = String.fromCharCode(code - 64);
+      }
+    }
+    if (this.altLatch && text.length === 1) {
+      text = `\x1b${text}`;
+    }
     this.controller.sendInput(text + '\r');
     this.inputLine = '';
+    this.ctrlLatch = false;
+    this.altLatch = false;
+  }
+
+  private sendKey(sequence: string): void {
+    this.controller.sendInput(sequence);
   }
 
   private async closeTerminal(): Promise<void> {
@@ -312,6 +330,126 @@ export struct TerminalScreen {
       .width('100%')
       .backgroundColor('#0F1115')
       .scrollable(ScrollDirection.Vertical)
+
+      if (this.showKeys) {
+        Scroll() {
+          Row({ space: 6 }) {
+            Button('Esc')
+              .height(28)
+              .fontSize(11)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x1b');
+              })
+            Button('Tab')
+              .height(28)
+              .fontSize(11)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\t');
+              })
+            Button('Ctrl+C')
+              .height(28)
+              .fontSize(11)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x03');
+              })
+            Button('Ctrl+D')
+              .height(28)
+              .fontSize(11)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x04');
+              })
+            Button('Ctrl+Z')
+              .height(28)
+              .fontSize(11)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x1a');
+              })
+            Button('↑')
+              .height(28)
+              .fontSize(12)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x1b[A');
+              })
+            Button('↓')
+              .height(28)
+              .fontSize(12)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x1b[B');
+              })
+            Button('←')
+              .height(28)
+              .fontSize(12)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x1b[D');
+              })
+            Button('→')
+              .height(28)
+              .fontSize(12)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\x1b[C');
+              })
+            Button('Enter')
+              .height(28)
+              .fontSize(11)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.sendKey('\r');
+              })
+          }
+        }
+        .scrollable(ScrollDirection.Horizontal)
+        .width('100%')
+        .padding({ left: 12, right: 12 })
+      }
+
+      Row({ space: 8 }) {
+        Button(this.ctrlLatch ? 'Ctrl*' : 'Ctrl')
+          .height(30)
+          .fontSize(11)
+          .backgroundColor(this.ctrlLatch ? '#111111' : '#F2F2F2')
+          .fontColor(this.ctrlLatch ? '#FFFFFF' : '#111111')
+          .onClick(() => {
+            this.ctrlLatch = !this.ctrlLatch;
+          })
+        Button(this.altLatch ? 'Alt*' : 'Alt')
+          .height(30)
+          .fontSize(11)
+          .backgroundColor(this.altLatch ? '#111111' : '#F2F2F2')
+          .fontColor(this.altLatch ? '#FFFFFF' : '#111111')
+          .onClick(() => {
+            this.altLatch = !this.altLatch;
+          })
+        Button(this.showKeys ? '收起按键' : '快捷键')
+          .height(30)
+          .fontSize(11)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.showKeys = !this.showKeys;
+          })
+        Blank()
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, bottom: 4 })
 
       Row({ space: 8 }) {
         TextInput({ placeholder: '输入命令…', text: this.inputLine })
