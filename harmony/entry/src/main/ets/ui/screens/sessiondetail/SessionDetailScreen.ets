@@ -136,6 +136,30 @@ export struct SessionDetailScreen {
     }
   }
 
+  private rowCopyText(row: TimelineRow): string {
+    if (row.kind === TimelineRowKind.ToolCall) {
+      const command: string = row.command.length > 0 ? `$ ${row.command}` : row.title;
+      return row.body.length > 0 ? `${command}\n${row.body}` : command;
+    }
+    if (row.body.length > 0) {
+      return row.body;
+    }
+    return row.title;
+  }
+
+  private async copyText(text: string, label: string): Promise<void> {
+    if (text.length === 0) {
+      return;
+    }
+    try {
+      const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+      await pasteboard.getSystemPasteboard().setData(data);
+      promptAction.showToast({ message: label });
+    } catch (error) {
+      promptAction.showToast({ message: '复制失败' });
+    }
+  }
+
   private async copyShareUrl(): Promise<void> {
     try {
       const data: pasteboard.PasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN,
@@ -377,6 +401,24 @@ export struct SessionDetailScreen {
       this.actionError = (error as Error).message;
     } finally {
       this.actionBusy = false;
+    }
+  }
+
+  @Builder
+  rowMenu(row: TimelineRow) {
+    Menu() {
+      if (this.rowCopyText(row).length > 0) {
+        MenuItem({ content: '复制文本' })
+          .onClick(() => {
+            this.copyText(this.rowCopyText(row), '文本已复制');
+          })
+      }
+      if (row.kind === TimelineRowKind.AgentMessage) {
+        MenuItem({ content: '分享回复' })
+          .onClick(() => {
+            this.shareMessage(row.id);
+          })
+      }
     }
   }
 
@@ -838,6 +880,7 @@ export struct SessionDetailScreen {
             ListItem() {
               this.rowView(row)
             }
+            .bindContextMenu(this.rowMenu(row), ResponseType.LongPress)
           }, (row: TimelineRow) => row.id)
         }
         .layoutWeight(1)
