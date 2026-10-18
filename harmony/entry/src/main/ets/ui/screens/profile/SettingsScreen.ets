@@ -1,8 +1,9 @@
-import { AuthApi } from '../../../api/AuthApi';
 import { AuthMeResponse } from '../../../api/AuthDtos';
 import { APP_VERSION } from '../../../core/AppConfig';
 import { AuthController } from '../../../feature/auth/AuthController';
 import { Notifications } from '../../../platform/Notifications';
+import { compareVersions } from '../../../core/Version';
+import { AuthApi } from '../../../api/AuthApi';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 
 /**
@@ -23,6 +24,9 @@ export struct SettingsScreen {
   private api: AuthApi = new AuthApi();
   private controller: AuthController = new AuthController();
   private notifications: Notifications = new Notifications();
+  private authApi: AuthApi = new AuthApi();
+  @State checkingUpdate: boolean = false;
+  @State updateMessage: string = '';
   @State displayName: string = '';
   @State email: string = '';
   @State role: string = '';
@@ -40,6 +44,36 @@ export struct SettingsScreen {
   aboutToAppear(): void {
     this.load();
     this.refreshNotificationState();
+  }
+
+  private async checkUpdate(): Promise<void> {
+    if (this.checkingUpdate) {
+      return;
+    }
+    this.checkingUpdate = true;
+    this.updateMessage = '';
+    try {
+      const session: AuthSession | null = this.session;
+      if (session === null) {
+        this.updateMessage = '请先登录';
+        return;
+      }
+      const health = await this.authApi.health(session.serverUrl);
+      const latestRaw: string | undefined = health.version;
+      const latest: string = latestRaw === undefined ? '' : latestRaw.trim();
+      const comparison: number | null = compareVersions(latest, APP_VERSION);
+      if (comparison === null) {
+        this.updateMessage = `无法比较版本：服务端 ${latest} / 客户端 ${APP_VERSION}`;
+      } else if (comparison > 0) {
+        this.updateMessage = `发现新版本 ${latest}（当前 ${APP_VERSION}）。HarmonyOS 客户端需从源码重新构建安装。`;
+      } else {
+        this.updateMessage = `已是最新版本（${APP_VERSION}）`;
+      }
+    } catch (error) {
+      this.updateMessage = (error as Error).message;
+    } finally {
+      this.checkingUpdate = false;
+    }
   }
 
   private async refreshNotificationState(): Promise<void> {
@@ -250,6 +284,30 @@ export struct SettingsScreen {
             this.infoRow('服务器', this.session !== null ? this.session.serverUrl : '—')
             Divider().color('#EFEFEF')
             this.infoRow('版本', APP_VERSION)
+            Row({ space: 8 }) {
+              Text('检查更新')
+                .fontSize(14)
+                .fontColor('#111111')
+                .layoutWeight(1)
+              Button(this.checkingUpdate ? '检查中' : '检查')
+                .height(26)
+                .fontSize(11)
+                .backgroundColor('#F2F2F2')
+                .fontColor('#111111')
+                .enabled(!this.checkingUpdate)
+                .onClick(() => {
+                  this.checkUpdate();
+                })
+            }
+            .width('100%')
+            .padding({ top: 6, bottom: 6 })
+            if (this.updateMessage.length > 0) {
+              Text(this.updateMessage)
+                .fontSize(11)
+                .fontColor('#8A8A8A')
+                .width('100%')
+                .padding({ bottom: 6 })
+            }
             Divider().color('#EFEFEF')
             Row({ space: 8 }) {
               Text('通知')

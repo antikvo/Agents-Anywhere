@@ -19,6 +19,7 @@
 | OAuth 登录（PKCE + 深链回调） | `android/feature/auth/WebLoginViewModel.kt` | `GET /auth/oauth/start`、`/auth/oauth/callback`、`POST /auth/oauth/finalize` | `platform/OAuth`、`feature/auth/OAuthController.ets` | ⬜ |
 | token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ⬜ |
 | 账号资料：头像、昵称、邮箱绑定、改密 | `android/ui/screens/profile/*` | `GET /auth/me`、`PUT /auth/me/profile`、`/avatar`、`/email`、`POST /auth/change-password` | `ui/screens/profile/` | ⬜ |
+| 应用内检查更新 | Android `feature/update/AppUpdateViewModel.kt` | `GET /health` 版本比较 | `core/Version.ets`、`ui/screens/profile/SettingsScreen.ets` | 🔄 设置页「检查更新」按服务端版本提示已是最新/可更新并验证；下载与安装流程未做（HarmonyOS 需签名与上架） |
 | 公告与公告门 | `android/ui/screens/announcements/AnnouncementGate.kt` | `GET /announcement` | `api/AnnouncementsApi.ets`、`ui/screens/home/SessionListScreen.ets` | 🔄 首页公告横幅（Markdown + 关闭、刷新同步）已接并验证；强制确认的公告门未做 |
 | WebSocket 客户端与 ws-ticket 鉴权 | `android/feature/realtime/*` | `POST /ws-ticket`、`GET /sessions/{id}/ws`、dashboard ws | `api/RealtimeClient.ets` | 🔄 会话 WS 已通（订阅/重连/补拉已接），dashboard WS 未接 |
 | 事件合批、去重与补拉 | `SessionRealtimeController.kt`、`RealtimeRetry.kt` | 34ms / 100 条合批、eventId LRU 去重、`events?after=` | `feature/realtime/` | 🔄 `events?after=` 补拉与 timeline/meta 事件合并已接，合批去重未接 |
