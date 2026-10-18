@@ -19,6 +19,8 @@ import { FilesScreen } from '../files/FilesScreen';
 import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
 import { FileChange } from '../../../model/Timeline';
 import { pasteboard } from '@kit.BasicServicesKit';
+import { camera, cameraPicker } from '@kit.CameraKit';
+import { AppContextHolder } from '../../../core/AppContextHolder';
 import { SessionDraftStore } from '../../../platform/SessionDraftStore';
 import { RuntimeCommand } from '../../../api/CommandsApi';
 import { promptAction } from '@kit.ArkUI';
@@ -306,14 +308,50 @@ export struct SessionDetailScreen {
       }
       const uri: string = result.photoUris[0];
       const name: string = uri.substring(uri.lastIndexOf('/') + 1);
-      const lower: string = name.toLowerCase();
-      const mediaType: string = lower.endsWith('.png') ? 'image/png' : 'image/jpeg';
-      this.uploading = true;
-      const data: ArrayBuffer = this.readFileBytes(uri);
-      const uploaded: UploadedAttachment = await this.controller.uploadAttachment(name, mediaType, data);
-      this.pendingNames.push(uploaded.name);
+      await this.uploadFromUri(uri, name);
     } catch (error) {
       this.actionError = (error as Error).message;
+    } finally {
+      this.uploading = false;
+    }
+  }
+
+  private async uploadFromUri(uri: string, name: string): Promise<void> {
+    const lower: string = name.toLowerCase();
+    const mediaType: string = lower.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    this.uploading = true;
+    const data: ArrayBuffer = this.readFileBytes(uri);
+    const uploaded: UploadedAttachment = await this.controller.uploadAttachment(name, mediaType, data);
+    this.pendingNames.push(uploaded.name);
+  }
+
+  private async capturePhoto(): Promise<void> {
+    if (this.uploading) {
+      return;
+    }
+    this.actionError = '';
+    try {
+      let result: cameraPicker.PickerResult | undefined = undefined;
+      try {
+        result = await cameraPicker.pick(AppContextHolder.require(),
+          [cameraPicker.PickerMediaType.PHOTO], {
+            cameraPosition: camera.CameraPosition.CAMERA_POSITION_BACK
+          });
+      } catch (error) {
+        this.actionError = '当前设备没有可用相机，请改用「从相册选择」';
+        return;
+      }
+      if (result === undefined || result === null) {
+        this.actionError = '当前设备没有可用相机，请改用「从相册选择」';
+        return;
+      }
+      if (result.resultCode !== 0 || result.resultUri.length === 0) {
+        return;
+      }
+      const name: string = `camera-${Date.now()}.jpg`;
+      await this.uploadFromUri(result.resultUri, name);
+    } catch (error) {
+      this.actionError = `相机不可用：${(error as Error).message}`;
     } finally {
       this.uploading = false;
     }
@@ -999,9 +1037,20 @@ export struct SessionDetailScreen {
           .backgroundColor('#F5F5F5')
           .fontColor('#333333')
           .enabled(!this.uploading)
-          .onClick(() => {
-            this.pickAttachment();
-          })
+          .bindMenu([
+            {
+              value: '从相册选择',
+              action: () => {
+                this.pickAttachment();
+              }
+            },
+            {
+              value: '拍照上传',
+              action: () => {
+                this.capturePhoto();
+              }
+            }
+          ])
         if (this.draft.trim().startsWith('/')) {
           Column({ space: 4 }) {
             if (this.commandSuggestions().length > 0) {
