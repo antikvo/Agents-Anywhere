@@ -2,6 +2,7 @@ import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { TerminalController } from '../../../feature/terminal/TerminalController';
 import { TermSpan, terminalColor } from '../../../model/TerminalBuffer';
 import { TerminalView } from '../../../api/TerminalApi';
+import { BackgroundTask } from '../../../platform/BackgroundTask';
 
 /**
  * 终端：VT 解析 + 颜色渲染 + 输入/清屏。
@@ -34,6 +35,7 @@ export struct TerminalScreen {
   }
 
   aboutToDisappear(): void {
+    BackgroundTask.stop();
     this.controller.close();
   }
 
@@ -49,6 +51,7 @@ export struct TerminalScreen {
       await this.controller.start(session, this.sessionId, 80, 26);
       this.syncTerminals();
       this.refresh();
+      await BackgroundTask.start();
     } catch (error) {
       const message: string = (error as Error).message;
       this.errorMessage = message.toLowerCase().includes('offline') ?

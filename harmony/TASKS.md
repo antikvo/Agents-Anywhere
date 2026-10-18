@@ -110,7 +110,7 @@
 | ArkUI 渲染（等宽字体、颜色、光标、选区、复制粘贴） | `com/termux/view`（行为参考） | — | `ui/screens/terminal/TerminalScreen.ets` | 🔄 等宽 + 16/256 色 + 加粗已接；光标/选区/复制粘贴未做 |
 | resize 与软键盘 | `TerminalController.kt` | terminal resize 帧 | `feature/terminal/` | 🔄 resize 帧已接；软键盘自适应未做 |
 | 多终端标签 | `TerminalScreen.kt` | — | `ui/screens/terminal/TerminalScreen.ets` | ✅ 标签切换 + 新建已在线验证 |
-| 后台长时任务保活 | `RemoteTerminalForegroundService.kt` | — | `platform/BackgroundTask.ets` | ⬜ |
+| 后台长时任务保活 | `RemoteTerminalForegroundService.kt` | — | `platform/BackgroundTask.ets` | ✅ dataTransfer 长时任务，终端页启动/停止；实测后台期间命令输出未丢 |
 | 断线重连 | `RemoteTerminalController.kt` | — | `feature/terminal/TerminalController.ets` | 🔄 手动重连 + 自动退避（0.5s→8s，最多 6 次）+ fromSeq 续传已接；断线时屏幕缓冲保留已实测（服务重启导致终端丢失时只能新建） |
 | 快捷键面板、清屏、Ctrl/Alt 锁存 | `TerminalScreen.kt` | — | `ui/screens/terminal/` | ⬜ |
 
