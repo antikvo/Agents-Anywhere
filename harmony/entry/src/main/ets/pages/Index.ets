@@ -1,10 +1,11 @@
 import { AuthMeResponse } from '../api/AuthDtos';
 import { AuthController } from '../feature/auth/AuthController';
 import { AuthSession } from '../feature/auth/AuthSessionStore';
-import { SessionItem } from '../model/Session';
 import { LoginScreen } from '../ui/screens/auth/LoginScreen';
 import { SessionListScreen } from '../ui/screens/home/SessionListScreen';
 import { SessionDetailScreen } from '../ui/screens/sessiondetail/SessionDetailScreen';
+import { NewSessionScreen } from '../ui/screens/home/NewSessionScreen';
+import { SessionItem, SessionStatusKind } from '../model/Session';
 import { SettingsScreen } from '../ui/screens/profile/SettingsScreen';
 import { ProjectsScreen } from '../ui/screens/projects/ProjectsScreen';
 import { takePendingSession } from '../platform/DeepLinkPrefs';
@@ -19,6 +20,7 @@ struct Index {
   @State accountLabel: string = '';
   @State selectedSession: SessionItem | null = null;
   @State showSettings: boolean = false;
+  @State showNewSession: boolean = false;
   @State showProjects: boolean = false;
   @State pendingDeepLink: string = '';
   @LocalStorageProp('deeplinkSessionId') @Watch('onDeepLinkChanged') deepLinkSessionId: string = '';
@@ -100,6 +102,25 @@ struct Index {
     }
   }
 
+  private placeholderSession(sessionId: string): SessionItem {
+    return {
+      id: sessionId,
+      connectorId: '',
+      deviceName: '',
+      title: '新建会话',
+      runtimeName: '',
+      statusKind: SessionStatusKind.Idle,
+      statusLabel: '空闲',
+      unread: false,
+      pinned: false,
+      archived: false,
+      takeover: false,
+      updatedLabel: '',
+      sortAt: '',
+      projectName: ''
+    };
+  }
+
   private async signOut(): Promise<void> {
     await this.controller.signOut();
     this.session = null;
@@ -153,6 +174,17 @@ struct Index {
             this.controller.persistDisplayName(name);
           }
         })
+      } else if (this.showNewSession) {
+        NewSessionScreen({
+          session: this.session,
+          onBack: () => {
+            this.showNewSession = false;
+          },
+          onCreated: (sessionId: string) => {
+            this.showNewSession = false;
+            this.selectedSession = this.placeholderSession(sessionId);
+          }
+        })
       } else if (this.selectedSession !== null) {
         SessionDetailScreen({
           session: this.session,
@@ -177,6 +209,9 @@ struct Index {
           },
           onOpenSettings: () => {
             this.showSettings = true;
+          },
+          onCreateSession: () => {
+            this.showNewSession = true;
           }
         })
       }

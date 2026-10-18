@@ -36,7 +36,7 @@
 | 筛选：Active / Archived / 待审批 / 错误 | `feature/sessions/ArchivedSessionsState.kt` | `GET /sessions?archived=` | `ui/screens/home/SessionFilterBar.ets` | ⬜ |
 | 搜索：标题 / 工作区 / Runtime / 设备 | `ui/screens/home/HomeLists.kt` | 本地过滤（已加载页范围） | `ui/screens/home/SessionListScreen.ets` | ✅ 已接本地搜索；服务端搜索待确认 |
 | 项目列表与项目操作（新建/改名/归档/删除） | `feature/sessions/WorkspaceProjects.kt`、`ui/screens/home/HomeProjectMenus.kt` | `GET/POST/PATCH/DELETE /projects` | `api/ProjectsApi.ets`、`ui/screens/projects/ProjectsScreen.ets` | ✅ 列表/新建/改名/删除/批量归档会话已接并验证 |
-| 新建会话完整流程（设备→Runtime→工作区→模型/权限→首条消息） | `ui/screens/home/NewSession*.kt`（12 个文件） | `POST /sessions`、`POST /sessions/create-and-start`、runtime catalog | `ui/screens/sessiondetail/NewSessionScreen.ets` | ⬜ |
+| 新建会话完整流程（设备→Runtime→工作区→模型/权限→首条消息） | `ui/screens/home/NewSession*.kt`（12 个文件） | `POST /sessions/create-and-start`、runtime catalog | `ui/screens/home/NewSessionScreen.ets`、`api/NewSessionApi.ets` | ✅ 设备/Runtime/项目/模型/工作区/首条消息 → 创建并进入详情，已在线验证；权限（permission）选择与失败对账 `knownSessionIds` 未做 |
 | 归档会话页与恢复 | `ui/screens/home/ArchivedSessionsScreen.kt` | `POST /sessions/archive`、`/unarchive` | `ui/screens/home/SessionListScreen.ets`（已归档 Tab） | ✅ 已归档 Tab + 行内「恢复」已接并在线验证；批量归档/取消归档未做 |
 | 归档项目选择器与按项目归档/恢复 | `ui/screens/home/ArchivedProjectPicker.kt` | `POST /projects/{id}/sessions/archive-all` | `api/ProjectsApi.ets`、`ui/screens/projects/ProjectsScreen.ets` | 🔄 按项目归档已接并在线验证；恢复入口（已归档页/项目选择器）未做 |
 | 侧边栏视图模式与项目偏好 | `HomeSidebarViewMode.kt`、`HomeProjectPreferences.kt` | — | `feature/sessions/` | ⬜ |

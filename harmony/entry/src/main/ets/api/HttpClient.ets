@@ -31,8 +31,18 @@ export class ApiError extends Error {
   }
 }
 
+interface ErrorDetailObject {
+  code?: string;
+  message?: string;
+}
+
+interface ErrorDetailListItem {
+  msg?: string;
+  message?: string;
+}
+
 interface ErrorPayload {
-  detail?: string;
+  detail?: string | ErrorDetailObject | ErrorDetailListItem[] | null;
   message?: string;
 }
 
@@ -170,13 +180,33 @@ export class HttpClient {
     }
     try {
       const parsed: ErrorPayload = JSON.parse(text) as ErrorPayload;
-      const detail: string | undefined = parsed.detail;
-      const message: string | undefined = parsed.message;
-      if (detail !== undefined && detail.length > 0) {
+      const detail: string | ErrorDetailObject | ErrorDetailListItem[] | null | undefined = parsed.detail;
+      if (typeof detail === 'string' && detail.length > 0) {
         return detail;
       }
-      if (message !== undefined && message.length > 0) {
-        return message;
+      if (detail !== undefined && detail !== null && typeof detail !== 'string') {
+        if (Array.isArray(detail)) {
+          const messages: string[] = [];
+          detail.forEach((item: ErrorDetailListItem) => {
+            const msg: string | undefined = item.msg !== undefined ? item.msg : item.message;
+            if (msg !== undefined && msg.length > 0) {
+              messages.push(msg);
+            }
+          });
+          if (messages.length > 0) {
+            return messages.join('; ');
+          }
+        } else {
+          const detailObject: ErrorDetailObject = detail as ErrorDetailObject;
+          const objectMessage: string | undefined = detailObject.message !== undefined ?
+            detailObject.message : detailObject.code;
+          if (objectMessage !== undefined && objectMessage.length > 0) {
+            return objectMessage;
+          }
+        }
+      }
+      if (typeof parsed.message === 'string' && parsed.message.length > 0) {
+        return parsed.message;
       }
     } catch (error) {
       // 非 JSON 响应，回退到原始文本

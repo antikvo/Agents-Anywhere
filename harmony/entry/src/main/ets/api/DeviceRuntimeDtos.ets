@@ -44,3 +44,23 @@ export interface CreateRuntimeBody {
   config: Record<string, Object>;
   active: boolean;
 }
+
+export interface ModelReasoningItem {
+  displayName: string;
+  id: string;
+  selectionId: string;
+}
+
+export interface ModelCatalogItem {
+  displayName: string;
+  id: string;
+  reasoningItems: ModelReasoningItem[];
+}
+
+interface ModelCatalogInner {
+  models: ModelCatalogItem[];
+}
+
+export interface ModelCatalogResponse {
+  catalog: ModelCatalogInner;
+}

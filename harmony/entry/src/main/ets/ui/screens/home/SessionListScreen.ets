@@ -22,6 +22,8 @@ export struct SessionListScreen {
   };
   onOpenSettings: () => void = () => {
   };
+  onCreateSession: () => void = () => {
+  };
   @Prop @Watch('onDeepLinkPropChanged') pendingDeepLink: string = '';
   onDeepLinkConsumed: () => void = () => {
   };
@@ -361,6 +363,16 @@ export struct SessionListScreen {
           .fontColor('#000000')
           .onClick(() => {
             this.reload();
+          })
+
+        Button('新建')
+          .height(32)
+          .fontSize(12)
+          .margin({ left: 8 })
+          .backgroundColor('#000000')
+          .fontColor('#FFFFFF')
+          .onClick(() => {
+            this.onCreateSession();
           })
 
         Button(this.markingRead ? '已读中' : '全部已读')

@@ -2,7 +2,7 @@ import { http } from '@kit.NetworkKit';
 import { apiUrl } from '../core/ServerUrl';
 import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE, HTTP_METHOD_PUT } from './HttpClient';
 import { ConnectorView, ConnectorsResponse } from './SessionDtos';
-import { CreateRuntimeBody, DeviceRuntimeItem, DeviceRuntimeListResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
+import { CreateRuntimeBody, DeviceRuntimeItem, DeviceRuntimeListResponse, ModelCatalogResponse, RuntimeTypeItem, RuntimeTypeListResponse } from './DeviceRuntimeDtos';
 
 export interface ConnectorCreateResponse {
   connector: ConnectorView;
@@ -118,6 +118,14 @@ export class DevicesApi {
     });
     const response: ArchiveAllResult = JSON.parse(text) as ArchiveAllResult;
     return response.affected;
+  }
+
+  async modelCatalog(serverUrl: string, token: string, connectorId: string,
+    runtimeId: string): Promise<ModelCatalogResponse> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}/runtimes/` +
+      `${encodeURIComponent(runtimeId)}/catalogs/model`;
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), { token: token });
+    return JSON.parse(text) as ModelCatalogResponse;
   }
 
   async listConnectors(serverUrl: string, token: string): Promise<ConnectorsResponse> {
