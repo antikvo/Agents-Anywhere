@@ -1,5 +1,5 @@
 import { AuthApi, MobileLoginStatusResponse } from '../../api/AuthApi';
-import { AuthMeResponse } from '../../api/AuthDtos';
+import { AuthConfigResponse, AuthMeResponse } from '../../api/AuthDtos';
 import { normalizeServerOrigin } from '../../core/ServerUrl';
 import { AuthSession, AuthSessionStore } from './AuthSessionStore';
 
@@ -42,6 +42,19 @@ export class AuthController {
 
   async savedServerUrl(): Promise<string> {
     return await this.store.readServerUrl();
+  }
+
+  async register(serverUrl: string, email: string, password: string,
+    setupToken: string): Promise<AuthSession> {
+    const origin: string | null = normalizeServerOrigin(serverUrl);
+    if (origin === null) {
+      throw new Error('请输入有效的服务器地址，例如 https://aa.example.com');
+    }
+    if (email.trim().length === 0 || password.length === 0) {
+      throw new Error('请输入邮箱和密码');
+    }
+    const auth = await this.api.register(origin, email, password, setupToken);
+    return await this.store.save(origin, auth);
   }
 
   async signIn(serverUrl: string, email: string, password: string): Promise<AuthSession> {
@@ -105,12 +118,11 @@ export class AuthController {
     return await this.api.me(session.serverUrl, session.accessToken);
   }
 
-  async authConfig(serverUrl: string): Promise<boolean> {
+  async authConfig(serverUrl: string): Promise<AuthConfigResponse> {
     const origin: string | null = normalizeServerOrigin(serverUrl);
     if (origin === null) {
       throw new Error('请输入有效的服务器地址');
     }
-    const config = await this.api.authConfig(origin);
-    return config.needsBootstrap;
+    return await this.api.authConfig(origin);
   }
 }

@@ -2,6 +2,7 @@ import { AuthMeResponse } from '../api/AuthDtos';
 import { AuthController } from '../feature/auth/AuthController';
 import { AuthSession } from '../feature/auth/AuthSessionStore';
 import { LoginScreen } from '../ui/screens/auth/LoginScreen';
+import { RegisterScreen } from '../ui/screens/auth/RegisterScreen';
 import { SessionListScreen } from '../ui/screens/home/SessionListScreen';
 import { SessionDetailScreen } from '../ui/screens/sessiondetail/SessionDetailScreen';
 import { NewSessionScreen } from '../ui/screens/home/NewSessionScreen';
@@ -22,6 +23,9 @@ struct Index {
   @State showSettings: boolean = false;
   @State showNewSession: boolean = false;
   @State showProjects: boolean = false;
+  @State showRegister: boolean = false;
+  @State registerNeedsBootstrap: boolean = false;
+  @State registerServerUrl: string = '';
   @State pendingDeepLink: string = '';
   @LocalStorageProp('deeplinkSessionId') @Watch('onDeepLinkChanged') deepLinkSessionId: string = '';
 
@@ -136,6 +140,21 @@ struct Index {
         LoadingProgress()
           .width(48)
           .height(48)
+      } else if (this.session === null && this.showRegister) {
+        RegisterScreen({
+          controller: this.controller,
+          serverUrl: this.registerServerUrl,
+          needsBootstrap: this.registerNeedsBootstrap,
+          onRegistered: (session: AuthSession) => {
+            this.showRegister = false;
+            this.session = session;
+            this.accountLabel = this.labelOf(session);
+            this.loadAccount(session);
+          },
+          onBack: () => {
+            this.showRegister = false;
+          }
+        })
       } else if (this.session === null) {
         LoginScreen({
           controller: this.controller,
@@ -143,6 +162,11 @@ struct Index {
             this.session = session;
             this.accountLabel = this.labelOf(session);
             this.loadAccount(session);
+          },
+          onOpenRegister: (serverUrl: string) => {
+            this.showRegister = true;
+            this.registerServerUrl = serverUrl;
+            this.registerNeedsBootstrap = false;
           }
         })
       } else if (this.showProjects) {

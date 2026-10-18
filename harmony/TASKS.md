@@ -15,7 +15,7 @@
 | 账号密码登录 | `ios/API/APIClient.swift`、`server/api/auth.py` | `POST /auth/login`、`GET /auth/config`、`GET /health` | `api/AuthApi.ets`、`ui/screens/auth/LoginScreen.ets` | ✅ |
 | 退出登录（保留服务器地址） | `AuthSessionStore.kt` | — | `feature/auth/AuthController.ets` | ✅ |
 | 扫码登录（生成二维码 / 轮询 / 交换） | `android/ui/screens/auth/QrAuthScreens.kt` | `POST /auth/mobile-login/qr`、`/request`、`/status`、`/exchange` | `api/AuthApi.ets`、`feature/auth/AuthController.ets`、`ui/screens/auth/LoginScreen.ets`、`core/DeepLink.ets` | ✅ 深链/手动填入与 Scan Kit 摄像头扫码两条路径均已接；深链路径端到端验证，扫码拉起系统扫码页（模拟器无相机，真机验证取景与识别） |
-| 注册与首位管理员（setup token） | `android/ui/screens/auth/AuthScreens.kt` | `POST /auth/register`、`GET /auth/config` | `ui/screens/auth/RegisterScreen.ets` | ⬜ |
+| 注册与首位管理员（setup token） | `android/ui/screens/auth/AuthScreens.kt` | `POST /auth/register`、`GET /auth/config` | `ui/screens/auth/RegisterScreen.ets`、`api/AuthApi.ets` | ✅ 登录页按 `/auth/config` 展示注册/初始化入口；注册（含 displayName 派生、setupToken 字段）已接；已通过临时开启 registrationOpen 完成真实注册并自动登录，随后关闭 |
 | OAuth 登录（PKCE + 深链回调） | `android/feature/auth/WebLoginViewModel.kt` | `GET /auth/oauth/start`、`/auth/oauth/callback`、`POST /auth/oauth/finalize` | `platform/OAuth`、`feature/auth/OAuthController.ets` | ⬜ |
 | token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ✅ Asset Store Kit 保存访问令牌：prefs 中 `access_token` 为空，force-stop 后重启仍自动登录（读取自加密存储）；Asset 不可用时回退明文 |
 | 账号资料：头像、昵称、邮箱绑定、改密 | `android/ui/screens/profile/*` | `GET /auth/me`、`PUT /auth/me/profile`、`POST /auth/change-password` | `ui/screens/profile/SettingsScreen.ets` | 🔄 昵称修改/改密已接并验证；服务端 `PUT /auth/me/profile` 只接受 displayName，头像/邮箱绑定无接口（不适用） |

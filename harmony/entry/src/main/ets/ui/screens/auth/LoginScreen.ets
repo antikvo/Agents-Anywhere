@@ -1,5 +1,6 @@
 import { OFFICIAL_SERVER_URL } from '../../../core/AppConfig';
 import { AuthController } from '../../../feature/auth/AuthController';
+import { AuthConfigResponse } from '../../../api/AuthDtos';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { PendingMobileLogin, takePendingMobileLogin } from '../../../platform/DeepLinkPrefs';
 import { mobileLoginFromQrText, MobileLoginDeepLink } from '../../../core/DeepLink';
@@ -17,6 +18,8 @@ export struct LoginScreen {
   controller: AuthController = new AuthController();
   onSignedIn: (session: AuthSession) => void = () => {
   };
+  onOpenRegister: (serverUrl: string) => void = () => {
+  };
   @State serverUrl: string = OFFICIAL_SERVER_URL;
   @State email: string = '';
   @State password: string = '';
@@ -27,9 +30,31 @@ export struct LoginScreen {
   @State qrUserId: string = '';
   @State qrToken: string = '';
   @State qrStatus: string = '';
+  @State registerLabel: string = '';
 
   aboutToAppear(): void {
-    this.prefillServer();
+    this.boot();
+  }
+
+  private async boot(): Promise<void> {
+    await this.prefillServer();
+    await this.loadAuthConfig();
+  }
+
+  private refreshRegisterLink(): void {
+    setTimeout(() => {
+      this.loadAuthConfig();
+    }, 700);
+  }
+
+  private async loadAuthConfig(): Promise<void> {
+    try {
+      const config: AuthConfigResponse = await this.controller.authConfig(this.serverUrl);
+      this.registerLabel = config.needsBootstrap ? '创建首位管理员' :
+        (config.registrationOpen ? '注册账号' : '');
+    } catch (error) {
+      this.registerLabel = '';
+    }
   }
 
   private async prefillServer(): Promise<void> {
@@ -150,6 +175,7 @@ export struct LoginScreen {
           .width('100%')
           .onChange((value: string) => {
             this.serverUrl = value;
+            this.refreshRegisterLink();
           })
 
         TextInput({ placeholder: '邮箱', text: this.email })
@@ -247,6 +273,17 @@ export struct LoginScreen {
             .onClick(() => {
               this.qrMode = true;
               this.errorMessage = '';
+            })
+        }
+
+        if (this.registerLabel.length > 0) {
+          Button(this.registerLabel)
+            .width('100%')
+            .height(40)
+            .backgroundColor('#F2F2F2')
+            .fontColor('#000000')
+            .onClick(() => {
+              this.onOpenRegister(this.serverUrl);
             })
         }
 

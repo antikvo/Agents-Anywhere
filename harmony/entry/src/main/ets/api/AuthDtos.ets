@@ -14,6 +14,13 @@ export interface AuthResponse {
   emailVerified?: boolean;
 }
 
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  displayName?: string;
+  setupToken?: string;
+}
+
 export interface AuthMeResponse {
   userId: string;
   role: string;

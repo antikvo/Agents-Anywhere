@@ -2,7 +2,7 @@ import { http } from '@kit.NetworkKit';
 import { HTTP_METHOD_POST } from './HttpClient';
 import { apiUrl } from '../core/ServerUrl';
 import { ApiError, ApiErrorKind, HttpClient } from './HttpClient';
-import { AuthConfigResponse, AuthMeResponse, AuthResponse, HealthResponse } from './AuthDtos';
+import { AuthConfigResponse, AuthMeResponse, AuthResponse, HealthResponse, RegisterPayload } from './AuthDtos';
 
 interface LoginPayload {
   email: string;
@@ -70,6 +70,26 @@ export class AuthApi {
   async login(serverUrl: string, email: string, password: string): Promise<AuthResponse> {
     const payload: LoginPayload = { email: email.trim(), password: password };
     const text: string = await this.client.requestJson(apiUrl(serverUrl, '/auth/login'), {
+      method: http.RequestMethod.POST,
+      body: JSON.stringify(payload)
+    });
+    return JSON.parse(text) as AuthResponse;
+  }
+
+  async register(serverUrl: string, email: string, password: string,
+    setupToken: string): Promise<AuthResponse> {
+    const trimmed: string = email.trim();
+    const at: number = trimmed.indexOf('@');
+    const derived: string = at > 0 ? trimmed.substring(0, at) : trimmed;
+    const payload: RegisterPayload = {
+      email: trimmed,
+      password: password,
+      displayName: derived.length > 64 ? derived.substring(0, 64) : derived
+    };
+    if (setupToken.trim().length > 0) {
+      payload.setupToken = setupToken.trim();
+    }
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, '/auth/register'), {
       method: http.RequestMethod.POST,
       body: JSON.stringify(payload)
     });
