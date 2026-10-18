@@ -1,5 +1,8 @@
 import { FilesApi, FsEntryDto, FsTextResult } from '../../../api/FilesApi';
 import { AppContextHolder } from '../../../core/AppContextHolder';
+import { systemShare } from '@kit.ShareKit';
+import { uniformTypeDescriptor as utd } from '@kit.ArkData';
+import { fileUri } from '@kit.CoreFileKit';
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 
 /**
@@ -210,15 +213,25 @@ export struct FilesScreen {
               .fontColor('#000000')
               .layoutWeight(1)
               .maxLines(1)
-            Button('关闭')
-              .height(28)
-              .fontSize(12)
-              .backgroundColor('#F2F2F2')
-              .fontColor('#111111')
-              .onClick(() => {
-                this.imagePath = '';
-                this.imageName = '';
-              })
+            Row({ space: 8 }) {
+              Button('分享')
+                .height(28)
+                .fontSize(12)
+                .backgroundColor('#F2F2F2')
+                .fontColor('#111111')
+                .onClick(() => {
+                  this.shareCurrentImage();
+                })
+              Button('关闭')
+                .height(28)
+                .fontSize(12)
+                .backgroundColor('#F2F2F2')
+                .fontColor('#111111')
+                .onClick(() => {
+                  this.imagePath = '';
+                  this.imageName = '';
+                })
+            }
           }
           .width('100%')
           Image(this.imagePath)
@@ -284,6 +297,32 @@ export struct FilesScreen {
     .height('100%')
     .backgroundColor('#FFFFFF')
     .alignContent(Alignment.Center)
+  }
+
+  private async shareCurrentImage(): Promise<void> {
+    if (this.imagePath.length === 0 || this.imageName.length === 0) {
+      return;
+    }
+    try {
+      const localPath: string = this.imagePath.startsWith('file://') ?
+        this.imagePath.substring('file://'.length) : this.imagePath;
+      const uri: string = fileUri.getUriFromPath(localPath);
+      const lower: string = this.imageName.toLowerCase();
+      const utdId: string = lower.endsWith('.png') ? utd.UniformDataType.PNG :
+        lower.endsWith('.gif') ? utd.UniformDataType.GIF : utd.UniformDataType.JPEG;
+      const data: systemShare.SharedData = new systemShare.SharedData({
+        utd: utdId,
+        uri: uri,
+        title: this.imageName
+      });
+      const controller: systemShare.ShareController = new systemShare.ShareController(data);
+      controller.show(AppContextHolder.require(), {
+        selectionMode: systemShare.SelectionMode.SINGLE,
+        previewMode: systemShare.SharePreviewMode.DETAIL
+      });
+    } catch (error) {
+      this.errorMessage = `分享不可用：${(error as Error).message}`;
+    }
   }
 
   private sizeLabel(size?: number | null): string {
