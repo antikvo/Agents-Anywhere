@@ -128,8 +128,9 @@
 | 隐私政策、关于（版本 / 开源声明） | iOS `PrivacyPolicySheet`、`SettingsAboutView` | `ui/screens/profile/` | ⬜ |
 | 退出登录（确认 + 清凭据） | iOS `signOutAndDeleteCredentials` | `feature/auth/` | ⬜ |
 | 中英文（i18n） | Android `res/values*/strings.xml` | `core/i18n/` | ⬜ |
-| 推送（Push Kit）：审批到达通知 | 两端都未实现 | `platform/PushService.ets` | 🔄 本地通知（新未读/测试通知 + 深链点击）已接；远程 Push Kit 与审批触发未做 |
-| 审批实况窗 | 两端都未实现 | `platform/LiveView.ets` | ⬜ |
+| 实况窗（Live View） | iOS Live Activity / Android 通知 | Live View Kit | — | ⬜ 不适用：当前 DevEco SDK 未包含 Live View Kit，且需 AGC 配置与系统审批 |
+| 推送（Push Kit）：审批到达通知 | 两端都未实现 | `platform/PushService.ets` | ⬜ 不适用/待外部条件：当前 DevEco SDK 未包含 `@kit.PushKit`，且需 AGC 与服务端推送配置；本地通知（新未读/测试/深链）已覆盖提醒需求 |
+| 审批实况窗 | 两端都未实现 | `platform/LiveView.ets` | ⬜ 不适用：依赖 Live View Kit 与 AGC 配置，当前 SDK 不含 |
 | 深链 / 分享（Share Kit、App Linking） | — | `agentsanywhere://session/<sessionId>`、`?sessionId=` | `core/DeepLink.ets`、`platform/DeepLinkPrefs.ets`、`pages/Index.ets` | 🔄 冷/热启动深链跳转会话已接并验证；通知点击深链已接；Share Kit 未做 |
 | 相机拍照发图（`cameraPicker`） | Android `SessionCameraCapture.kt`、iOS `PhotosPicker` | `platform/CameraPicker.ets` | ⬜ |
 

@@ -239,4 +239,5 @@ hdc shell aa start -a EntryAbility -b com.agentsanywhere.harmony
 
 - 程序化读取剪贴板受系统限制，粘贴请用输入框长按菜单
 - 通知点击深链、后台保活、终端断线重连在真机上的行为可能与模拟器不同
+- 远程推送（Push Kit）与实况窗需要 AGC/服务端配置，当前 SDK 也未包含对应 Kit，客户端仅提供本地通知
 - 审批成功路径已用 Codex + request_approval 验证；Claude Runtime 本机凭据受限时仍会报 `Not logged in`

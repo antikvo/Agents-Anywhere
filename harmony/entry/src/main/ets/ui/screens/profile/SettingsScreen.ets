@@ -309,6 +309,11 @@ export struct SettingsScreen {
                 .padding({ bottom: 6 })
             }
             Divider().color('#EFEFEF')
+            Text('远程推送（Push Kit）需要服务端与 AGC 配置；当前版本使用本地通知提醒新未读与审批。')
+              .fontSize(10)
+              .fontColor('#9A9A9A')
+              .width('100%')
+              .padding({ top: 6 })
             Row({ space: 8 }) {
               Text('通知')
                 .fontSize(14)
