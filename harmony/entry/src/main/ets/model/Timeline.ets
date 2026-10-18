@@ -19,6 +19,7 @@ export interface TimelineRow {
   kind: TimelineRowKind;
   title: string;
   command: string;
+  systemLabel: string;
   body: string;
   status: string;
   timeLabel: string;
@@ -32,6 +33,15 @@ function commandOf(content: Object): string {
   const fields: TimelineContentFields = content as TimelineContentFields;
   const command: string | null | undefined = fields.command;
   return command === undefined || command === null ? '' : command;
+}
+
+function systemLabelOf(content: Object): string {
+  if (typeof content === 'string') {
+    return '';
+  }
+  const fields: TimelineContentFields = content as TimelineContentFields;
+  const kind: string | null | undefined = fields.kind;
+  return kind === undefined || kind === null ? '' : kind;
 }
 
 function contentText(content: Object): string {
@@ -115,6 +125,7 @@ export function toTimelineRows(items: TimelineItemDto[]): TimelineRow[] {
       kind: kind,
       title: kind === TimelineRowKind.ToolCall && rawContent !== null ? toolTitle(rawContent) : '',
       command: kind === TimelineRowKind.ToolCall && rawContent !== null ? commandOf(rawContent) : '',
+      systemLabel: rawContent === null ? '' : systemLabelOf(rawContent),
       body: body,
       status: item.status,
       timeLabel: timeLabel(item.createdAt),

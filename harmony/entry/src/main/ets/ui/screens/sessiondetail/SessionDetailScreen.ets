@@ -15,6 +15,7 @@ import { UploadedAttachment } from '../../../api/AttachmentsApi';
 import { InputAnswersPayload, InputRequestForm, parseInputRequest } from '../../../model/InputRequest';
 import { InputRequestCard } from '../../components/InputRequestCard';
 import { TerminalScreen } from '../terminal/TerminalScreen';
+import { parseQuestionReply, QuestionAnswer } from '../../../model/ProtocolMessages';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { fileIo } from '@kit.CoreFileKit';
 
@@ -360,9 +361,32 @@ export struct SessionDetailScreen {
       Row() {
         Blank()
         Column({ space: 4 }) {
-          Text(row.body)
-            .fontSize(15)
-            .fontColor('#FFFFFF')
+          if (parseQuestionReply(row.body) !== null) {
+            Column({ space: 6 }) {
+              ForEach(parseQuestionReply(row.body) as QuestionAnswer[], (item: QuestionAnswer) => {
+                Column({ space: 2 }) {
+                  Text(`问：${item.question}`)
+                    .fontSize(12)
+                    .fontColor('#BDBDBD')
+                    .width('100%')
+                  Text(`答：${item.answer}`)
+                    .fontSize(14)
+                    .fontColor('#FFFFFF')
+                    .width('100%')
+                }
+                .alignItems(HorizontalAlign.Start)
+                .width('100%')
+                .padding(8)
+                .borderRadius(6)
+                .backgroundColor('#3A3A3A')
+              }, (item: QuestionAnswer, index: number) => `qa-${row.id}-${index}`)
+            }
+            .width('100%')
+          } else {
+            Text(row.body)
+              .fontSize(15)
+              .fontColor('#FFFFFF')
+          }
           if (row.attachments.length > 0) {
             Column({ space: 6 }) {
               ForEach(row.attachments, (attachment: AttachmentRefDto) => {
@@ -459,12 +483,14 @@ export struct SessionDetailScreen {
       .borderRadius(10)
       .backgroundColor('#EFEFEF')
     } else {
-      Text(row.body.length > 0 ? row.body : row.title)
-        .fontSize(12)
-        .fontColor('#8A8A8A')
-        .width('100%')
-        .textAlign(TextAlign.Center)
-        .padding({ left: 24, right: 24, top: 6, bottom: 6 })
+      if (row.body.length > 0 || row.systemLabel.length > 0) {
+        Text(row.body.length > 0 ? row.body : row.systemLabel)
+          .fontSize(11)
+          .fontColor('#8A8A8A')
+          .width('100%')
+          .textAlign(TextAlign.Center)
+          .padding({ left: 24, right: 24, top: 6, bottom: 6 })
+      }
     }
   }
 

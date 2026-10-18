@@ -49,7 +49,7 @@
 | --- | --- | --- | --- | --- |
 | 快照 + 增量事件 + 断线补拉 | `feature/sessiondetail/SessionDetailController.kt` | `GET /sessions/{id}/snapshot`、`GET /events?after=`（最多 8 页，超出或 snapshotRequired 重取快照）、`WS /sessions/{id}/ws` | `feature/sessiondetail/SessionDetailController.ets` | 🔄 快照、WS 增量、补拉、history 向前翻页均已接 |
 | 时间线状态与 reducer 语义 | `SessionDetailState.kt`、`SessionDetailReducer.kt`、`SessionTimelineProjection.kt` | 事件协议 | `feature/sessiondetail/` | ⬜ |
-| 时间线事件渲染全集（用户/assistant/工具/系统/错误/审批/输入请求/git/notice） | `ui/screens/sessiondetail/SessionMessages.kt` | 事件协议 | `model/Timeline.ets`、`SessionDetailScreen.ets` | 🔄 用户/assistant/tool（命令+输出）/system/notice 已接并在线验证；artifact、reasoning、`<send_user_message_question_reply>` 解析待做 |
+| 时间线事件渲染全集（用户/assistant/工具/系统/错误/审批/输入请求/git/notice） | `ui/screens/sessiondetail/SessionMessages.kt` | 事件协议 | `model/Timeline.ets`、`model/ProtocolMessages.ets`、`SessionDetailScreen.ets` | 🔄 用户/assistant/tool（命令+输出）/system/notice/`<send_user_message_question_reply>`（问答卡片）已接并在线验证；artifact、reasoning 待做 |
 | 流式增量渲染与合并 | `SessionMessages.kt`、`SessionTimelineState.kt` | 事件协议 | `feature/sessiondetail/StreamingMerger.ets` | ⬜ |
 | Markdown 渲染（标题/嵌套列表/代码块/引用/行内强调/表格/图片） | `ui/screens/sessiondetail/AgentMarkdownText.kt`、`ios/Views/Chat/Markdown/*` | — | `ui/components/MarkdownView.ets` | ✅ 全部首版已接；图片点击放大、加载失败占位待补 |
 | 代码块与 Diff 预览 | `CodeBlockPreview.kt`、`DiffPreviewParser.kt` | — | `ui/components/CodeBlockView.ets` | ⬜ |
