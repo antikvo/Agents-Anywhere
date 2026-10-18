@@ -1,6 +1,6 @@
 # Agents Anywhere HarmonyOS
 
-HarmonyOS NEXT 客户端，开发中。当前已完成可编译骨架、登录链路（服务器地址、密码登录、登录态持久化）、会话列表（首屏 + 分页 + dashboard WS 实时刷新 + 置顶/归档入口）、会话详情（快照 + 实时 WS + 补拉 + 历史翻页 + 已读回执 + Markdown）、审批/输入请求卡片、接管/打断、文本发送、图片附件查看、附件上传与 Runtime 参数查看（离线降级）、本地搜索、项目/设备分组、Markdown（表格、单元格行内样式、嵌套列表、图片）、input_request 表单、设置页（含昵称/改密）、项目管理、文件浏览（目录 + 文本预览）、终端（VT 解析 + 颜色渲染 + 离线演示）、设备列表、详情（重命名/删除）与添加设备（创建 Connector + 启动命令）。业务功能按 [TASKS.md](TASKS.md) 逐项移植。方案与里程碑见 [docs/harmony-client-plan.md](../docs/harmony-client-plan.md)。
+HarmonyOS NEXT 客户端，开发中。当前已完成可编译骨架、登录链路（服务器地址、密码登录、登录态持久化）、会话列表（首屏 + 分页 + dashboard WS 实时刷新 + 置顶/归档入口）、会话详情（快照 + 实时 WS + 补拉 + 历史翻页 + 已读回执 + Markdown）、审批/输入请求卡片、接管/打断、文本发送、图片附件查看、附件上传与 Runtime 参数查看（离线降级）、本地搜索、项目/设备分组、Markdown（表格、单元格行内样式、嵌套列表、图片）、input_request 表单、设置页（含昵称/改密）、项目管理、文件浏览（目录 + 文本预览）、终端（VT 解析 + 颜色渲染 + 多终端标签 + 离线演示）、设备列表、详情（重命名/删除）与添加设备（创建 Connector + 启动命令）。业务功能按 [TASKS.md](TASKS.md) 逐项移植。方案与里程碑见 [docs/harmony-client-plan.md](../docs/harmony-client-plan.md)。
 
 ## 目标
 

@@ -103,15 +103,15 @@
 
 | 任务 | 蓝本 | 端点 | 落位 | 状态 |
 | --- | --- | --- | --- | --- |
-| 终端列表/创建/关闭 | `feature/terminal/*`、`ui/screens/terminal/TerminalScreen.kt` | `POST/DELETE /sessions/{id}/terminals` | `api/TerminalApi.ets` | 🔄 单终端创建/关闭已接；列表与多终端未做 |
+| 终端列表/创建/关闭 | `feature/terminal/*`、`ui/screens/terminal/TerminalScreen.kt` | `GET/POST/DELETE /sessions/{id}/terminals` | `api/TerminalApi.ets` | ✅ 列表复用、创建、关闭当前终端已在线验证；单标签关闭/重命名未做 |
 | WS 流式 + token + fromSeq 续传 | `TerminalApi.kt`、`TerminalController.kt` | `WS /sessions/{id}/terminals/{tid}/stream?token=`；帧类型 replay / output / exit / error，上行 input / resize | `feature/terminal/TerminalController.ets` | ✅ 流连接、base64 输出、input/resize 已在线验证；fromSeq 续传与重连未做 |
 | VT100/ANSI 解析器（CSI/OSC、颜色、光标、滚动、UTF-8） | `com/termux/view`（行为参考） | — | `model/TerminalBuffer.ets` | 🔄 首版：CSI 光标/擦除/SGR、256 色、UTF-8、滚动；OSC 与复杂序列待补 |
 | 屏幕缓冲与行回滚 | `RemoteTerminalOutputBuffer.kt`（64KB 分批 + generation 防串台） | — | `model/TerminalBuffer.ets` | 🔄 可见屏幕网格已接；scrollback 与 generation 未做 |
 | ArkUI 渲染（等宽字体、颜色、光标、选区、复制粘贴） | `com/termux/view`（行为参考） | — | `ui/screens/terminal/TerminalScreen.ets` | 🔄 等宽 + 16/256 色 + 加粗已接；光标/选区/复制粘贴未做 |
 | resize 与软键盘 | `TerminalController.kt` | terminal resize 帧 | `feature/terminal/` | 🔄 resize 帧已接；软键盘自适应未做 |
-| 多终端标签 | `TerminalScreen.kt` | — | `ui/screens/terminal/` | ⬜ |
+| 多终端标签 | `TerminalScreen.kt` | — | `ui/screens/terminal/TerminalScreen.ets` | ✅ 标签切换 + 新建已在线验证 |
 | 后台长时任务保活 | `RemoteTerminalForegroundService.kt` | — | `platform/BackgroundTask.ets` | ⬜ |
-| 断线重连 | `RemoteTerminalController.kt` | — | `feature/terminal/` | ⬜ |
+| 断线重连 | `RemoteTerminalController.kt` | — | `feature/terminal/TerminalController.ets` | 🔄 手动「重连」已接；自动退避重试与 fromSeq 续传未做 |
 | 快捷键面板、清屏、Ctrl/Alt 锁存 | `TerminalScreen.kt` | — | `ui/screens/terminal/` | ⬜ |
 
 ## 6. 设置与平台能力

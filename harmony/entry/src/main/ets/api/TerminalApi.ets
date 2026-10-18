@@ -19,6 +19,11 @@ interface TerminalResponse {
   serverTime: string;
 }
 
+interface TerminalListResponse {
+  terminals: TerminalView[];
+  serverTime: string;
+}
+
 interface TerminalCreateRequest {
   cols: number;
   rows: number;
@@ -44,6 +49,13 @@ export class TerminalApi {
     });
     const response: TerminalResponse = JSON.parse(text) as TerminalResponse;
     return response.terminal;
+  }
+
+  async list(serverUrl: string, token: string, sessionId: string): Promise<TerminalView[]> {
+    const path: string = `/sessions/${encodeURIComponent(sessionId)}/terminals`;
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), { token: token });
+    const response: TerminalListResponse = JSON.parse(text) as TerminalListResponse;
+    return response.terminals;
   }
 
   async close(serverUrl: string, token: string, sessionId: string, terminalId: string): Promise<void> {

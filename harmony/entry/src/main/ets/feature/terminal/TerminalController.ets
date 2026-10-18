@@ -21,8 +21,11 @@ export class TerminalController {
   private readonly base64: util.Base64Helper = new util.Base64Helper();
   private ws: webSocket.WebSocket | null = null;
   private terminal: TerminalView | null = null;
+  private terminals: TerminalView[] = [];
   private session: AuthSession | null = null;
   private sessionId: string = '';
+  private buffers: Map<string, TerminalBuffer> = new Map<string, TerminalBuffer>();
+  private lastSeq: number = 0;
   buffer: TerminalBuffer = new TerminalBuffer(80, 30);
   onUpdate: () => void = () => {
   };
@@ -33,17 +36,76 @@ export class TerminalController {
     return this.terminal;
   }
 
+  getTerminals(): TerminalView[] {
+    return this.terminals;
+  }
+
+  /**
+   * 优先复用会话下已有的 running 终端，没有才新建；随后连接并回放。
+   */
   async start(session: AuthSession, sessionId: string, cols: number, rows: number): Promise<void> {
     this.session = session;
     this.sessionId = sessionId;
-    this.buffer.resize(cols, rows);
-    this.onStatus('创建中');
-    const terminal: TerminalView = await this.api.create(session.serverUrl, session.accessToken,
-      sessionId, cols, rows);
+    this.onStatus('加载终端');
+    const existing: TerminalView[] = await this.api.list(session.serverUrl, session.accessToken,
+      sessionId);
+    this.terminals = existing;
+    let terminal: TerminalView | null = null;
+    for (let i = 0; i < existing.length; i++) {
+      if (existing[i].status === 'running') {
+        terminal = existing[i];
+        break;
+      }
+    }
+    if (terminal === null) {
+      this.onStatus('创建终端');
+      terminal = await this.api.create(session.serverUrl, session.accessToken, sessionId, cols, rows);
+      this.terminals = this.terminals.concat([terminal]);
+    }
+    this.switchTo(terminal);
+  }
+
+  switchTo(terminal: TerminalView): void {
+    const session: AuthSession | null = this.session;
+    if (session === null) {
+      return;
+    }
+    this.ws?.close();
+    this.ws = null;
     this.terminal = terminal;
-    this.buffer.resize(terminal.cols, terminal.rows);
-    this.connect(session, sessionId, terminal.terminalId);
+    let buffer: TerminalBuffer | undefined = this.buffers.get(terminal.terminalId);
+    if (buffer === undefined) {
+      buffer = new TerminalBuffer(terminal.cols, terminal.rows);
+      this.buffers.set(terminal.terminalId, buffer);
+    }
+    this.buffer = buffer;
+    this.lastSeq = 0;
+    this.connect(session, this.sessionId, terminal.terminalId);
     this.onStatus(terminal.status);
+  }
+
+  async createAnother(cols: number, rows: number): Promise<void> {
+    const session: AuthSession | null = this.session;
+    if (session === null) {
+      return;
+    }
+    this.onStatus('创建终端');
+    const terminal: TerminalView = await this.api.create(session.serverUrl, session.accessToken,
+      this.sessionId, cols, rows);
+    this.terminals = this.terminals.concat([terminal]);
+    this.switchTo(terminal);
+  }
+
+  reconnect(): void {
+    const terminal: TerminalView | null = this.terminal;
+    const session: AuthSession | null = this.session;
+    if (terminal === null || session === null) {
+      return;
+    }
+    this.ws?.close();
+    this.ws = null;
+    this.onStatus('重连中');
+    this.connect(session, this.sessionId, terminal.terminalId);
   }
 
   private connect(session: AuthSession, sessionId: string, terminalId: string): void {
@@ -62,6 +124,9 @@ export class TerminalController {
         const envelope: StreamEnvelope = JSON.parse(value) as StreamEnvelope;
         if (envelope.type === 'output' || envelope.type === 'replay') {
           const data: string | undefined = envelope.data;
+          if (envelope.seq !== undefined && envelope.seq > this.lastSeq) {
+            this.lastSeq = envelope.seq;
+          }
           if (data !== undefined && data.length > 0) {
             this.buffer.applyBytes(this.base64.decodeSync(data));
             this.onUpdate();

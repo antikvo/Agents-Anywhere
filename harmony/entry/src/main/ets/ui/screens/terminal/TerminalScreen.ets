@@ -19,6 +19,8 @@ export struct TerminalScreen {
   @State errorMessage: string = '';
   @State inputLine: string = '';
   @State busy: boolean = false;
+  @State terminals: TerminalView[] = [];
+  @State currentTerminalId: string = '';
 
   aboutToAppear(): void {
     this.controller.onUpdate = () => {
@@ -45,12 +47,35 @@ export struct TerminalScreen {
     this.errorMessage = '';
     try {
       await this.controller.start(session, this.sessionId, 80, 26);
+      this.syncTerminals();
       this.refresh();
     } catch (error) {
       const message: string = (error as Error).message;
       this.errorMessage = message.toLowerCase().includes('offline') ?
         '设备离线：终端需要在线 Connector。可点「演示」查看本地渲染。' : message;
       this.statusText = '未连接';
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private syncTerminals(): void {
+    this.terminals = this.controller.getTerminals();
+    const terminal: TerminalView | null = this.controller.getTerminal();
+    this.currentTerminalId = terminal === null ? '' : terminal.terminalId;
+  }
+
+  private async createTerminal(): Promise<void> {
+    if (this.busy) {
+      return;
+    }
+    this.busy = true;
+    try {
+      await this.controller.createAnother(80, 26);
+      this.syncTerminals();
+      this.refresh();
+    } catch (error) {
+      this.errorMessage = (error as Error).message;
     } finally {
       this.busy = false;
     }
@@ -143,6 +168,43 @@ export struct TerminalScreen {
       }
       .width('100%')
       .padding({ left: 12, right: 12, top: 10, bottom: 8 })
+
+      Row({ space: 6 }) {
+        ForEach(this.terminals, (terminal: TerminalView) => {
+          Button(`终端 ${terminal.terminalId.substring(terminal.terminalId.length - 4)}`)
+            .height(26)
+            .fontSize(11)
+            .backgroundColor(this.currentTerminalId === terminal.terminalId ? '#000000' : '#F2F2F2')
+            .fontColor(this.currentTerminalId === terminal.terminalId ? '#FFFFFF' : '#333333')
+            .onClick(() => {
+              this.controller.switchTo(terminal);
+              this.syncTerminals();
+              this.refresh();
+            })
+        }, (terminal: TerminalView) => terminal.terminalId)
+        Button('+')
+          .height(26)
+          .width(36)
+          .fontSize(16)
+          .padding(0)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .enabled(!this.busy)
+          .onClick(() => {
+            this.createTerminal();
+          })
+        Blank()
+        Button('重连')
+          .height(26)
+          .fontSize(11)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.controller.reconnect();
+          })
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, bottom: 6 })
 
       if (this.errorMessage.length > 0) {
         Text(this.errorMessage)
