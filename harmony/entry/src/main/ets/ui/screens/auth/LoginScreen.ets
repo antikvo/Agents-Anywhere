@@ -31,6 +31,8 @@ export struct LoginScreen {
   @State qrToken: string = '';
   @State qrStatus: string = '';
   @State registerLabel: string = '';
+  @State oauthLabel: string = '';
+  @State oauthEnabled: boolean = false;
 
   aboutToAppear(): void {
     this.boot();
@@ -39,6 +41,18 @@ export struct LoginScreen {
   private async boot(): Promise<void> {
     await this.prefillServer();
     await this.loadAuthConfig();
+  }
+
+  private async startOAuth(): Promise<void> {
+    try {
+      const origin: string = this.serverUrl.endsWith('/') ?
+        this.serverUrl.substring(0, this.serverUrl.length - 1) : this.serverUrl;
+      const url: string = `${origin}/api/v2/auth/oauth/start`;
+      const context = AppContextHolder.require();
+      await context.openLink(url, { appLinkingOnly: false });
+    } catch (error) {
+      this.errorMessage = `无法打开浏览器完成 OAuth：${(error as Error).message}`;
+    }
   }
 
   private refreshRegisterLink(): void {
@@ -52,8 +66,14 @@ export struct LoginScreen {
       const config: AuthConfigResponse = await this.controller.authConfig(this.serverUrl);
       this.registerLabel = config.needsBootstrap ? '创建首位管理员' :
         (config.registrationOpen ? '注册账号' : '');
+      this.oauthEnabled = config.oauthEnabled;
+      const provider: string = config.oauthProviderLabel === undefined ||
+        config.oauthProviderLabel === null ? 'OAuth' : config.oauthProviderLabel;
+      this.oauthLabel = `使用 ${provider} 登录`;
     } catch (error) {
       this.registerLabel = '';
+      this.oauthEnabled = false;
+      this.oauthLabel = '';
     }
   }
 
@@ -273,6 +293,17 @@ export struct LoginScreen {
             .onClick(() => {
               this.qrMode = true;
               this.errorMessage = '';
+            })
+        }
+
+        if (this.oauthEnabled && this.oauthLabel.length > 0) {
+          Button(this.oauthLabel)
+            .width('100%')
+            .height(40)
+            .backgroundColor('#F2F2F2')
+            .fontColor('#000000')
+            .onClick(() => {
+              this.startOAuth();
             })
         }
 
