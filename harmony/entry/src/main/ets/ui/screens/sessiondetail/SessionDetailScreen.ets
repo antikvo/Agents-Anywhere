@@ -238,6 +238,41 @@ export struct SessionDetailScreen {
     }
   }
 
+  /**
+   * 部分 runtime 的 notice.message 是 JSON 字符串（例如 {"detail": "..."}），
+   * 直接展示可读性差；这里尽量提取人类可读的部分。
+   */
+  private noticeMessage(notice: NoticeDto): string {
+    const raw: string | null | undefined = notice.message;
+    if (raw === null || raw === undefined || raw.length === 0) {
+      return '';
+    }
+    const text: string = raw.trim();
+    if (!text.startsWith('{')) {
+      return text;
+    }
+    interface NoticeErrorPayload {
+      detail?: string;
+      message?: string;
+      error?: string;
+    }
+    try {
+      const parsed: NoticeErrorPayload = JSON.parse(text) as NoticeErrorPayload;
+      if (parsed.detail !== undefined && parsed.detail.length > 0) {
+        return parsed.detail;
+      }
+      if (parsed.message !== undefined && parsed.message.length > 0) {
+        return parsed.message;
+      }
+      if (parsed.error !== undefined && parsed.error.length > 0) {
+        return parsed.error;
+      }
+    } catch (error) {
+      // 不是合法 JSON，按原文展示
+    }
+    return text;
+  }
+
   private inputForm(notice: NoticeDto): InputRequestForm | null {
     return parseInputRequest(notice.actions);
   }
@@ -276,8 +311,8 @@ export struct SessionDetailScreen {
       }
       .width('100%')
 
-      if (notice.message !== null && notice.message !== undefined && notice.message.length > 0) {
-        Text(notice.message)
+      if (this.noticeMessage(notice).length > 0) {
+        Text(this.noticeMessage(notice))
           .fontSize(12)
           .fontColor('#5A5A5A')
           .width('100%')
