@@ -139,6 +139,12 @@ export class SessionDetailController {
     return share.shareUrl;
   }
 
+  async createMessageShare(session: AuthSession, sessionId: string, itemIds: string[]): Promise<string> {
+    const share: ShareCreateResponse = await this.sessionsApi.createMessageShare(session.serverUrl,
+      session.accessToken, sessionId, itemIds);
+    return share.shareUrl;
+  }
+
   async connect(): Promise<void> {
     const session: AuthSession | null = this.currentSession;
     const sessionId: string = this.currentSessionId;

@@ -88,8 +88,18 @@ export class SessionsApi {
    * 标记已读。服务端要求 body 是裸 JSON 数组。
    */
   async createSessionShare(serverUrl: string, token: string, sessionId: string): Promise<ShareCreateResponse> {
+    return await this.createShare(serverUrl, token, sessionId, 'session', []);
+  }
+
+  async createMessageShare(serverUrl: string, token: string, sessionId: string,
+    itemIds: string[]): Promise<ShareCreateResponse> {
+    return await this.createShare(serverUrl, token, sessionId, 'message', itemIds);
+  }
+
+  private async createShare(serverUrl: string, token: string, sessionId: string, scope: string,
+    itemIds: string[]): Promise<ShareCreateResponse> {
     const path: string = `/sessions/${encodeURIComponent(sessionId)}/shares`;
-    const body: ShareCreateBody = { scope: 'session', itemIds: [] };
+    const body: ShareCreateBody = { scope: scope, itemIds: itemIds };
     const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
       method: HTTP_METHOD_POST,
       token: token,

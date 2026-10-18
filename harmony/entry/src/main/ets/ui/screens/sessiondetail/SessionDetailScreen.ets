@@ -39,6 +39,7 @@ export struct SessionDetailScreen {
   @State showShare: boolean = false;
   @State shareUrl: string = '';
   @State shareBusy: boolean = false;
+  @State shareScopeLabel: string = '会话';
   @State statusText: string = '';
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
@@ -97,6 +98,24 @@ export struct SessionDetailScreen {
     this.takeover = session.takeover;
   }
 
+  private async shareMessage(itemId: string): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const initial: SessionItem | null = this.initial;
+    if (session === null || initial === null || this.shareBusy || itemId.length === 0) {
+      return;
+    }
+    this.shareBusy = true;
+    try {
+      this.shareUrl = await this.controller.createMessageShare(session, initial.id, [itemId]);
+      this.shareScopeLabel = '回复';
+      this.showShare = true;
+    } catch (error) {
+      promptAction.showToast({ message: (error as Error).message });
+    } finally {
+      this.shareBusy = false;
+    }
+  }
+
   private async shareSession(): Promise<void> {
     const session: AuthSession | null = this.session;
     const initial: SessionItem | null = this.initial;
@@ -106,6 +125,7 @@ export struct SessionDetailScreen {
     this.shareBusy = true;
     try {
       this.shareUrl = await this.controller.createShare(session, initial.id);
+      this.shareScopeLabel = '会话';
       this.showShare = true;
     } catch (error) {
       promptAction.showToast({ message: (error as Error).message });
@@ -484,11 +504,20 @@ export struct SessionDetailScreen {
               }, (attachment: AttachmentRefDto) => attachment.fileId)
             }
           }
-          if (row.timeLabel.length > 0) {
-            Text(row.timeLabel)
+          Row({ space: 8 }) {
+            if (row.timeLabel.length > 0) {
+              Text(row.timeLabel)
+                .fontSize(10)
+                .fontColor('#9A9A9A')
+            }
+            Text('分享')
               .fontSize(10)
-              .fontColor('#9A9A9A')
+              .fontColor('#3A6FD8')
+              .onClick(() => {
+                this.shareMessage(row.id);
+              })
           }
+          .width('100%')
         }
         .alignItems(HorizontalAlign.Start)
         .padding(12)
@@ -936,12 +965,13 @@ export struct SessionDetailScreen {
       }
       if (this.showShare) {
         Column({ space: 10 }) {
-          Text('分享会话')
+          Text(`分享${this.shareScopeLabel}`)
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
             .fontColor('#000000')
             .width('100%')
-          Text('任何拿到链接的人都可以只读查看此会话（含附件）。')
+          Text(this.shareScopeLabel === '回复' ?
+            '任何拿到链接的人都可以只读查看这条回复。' : '任何拿到链接的人都可以只读查看此会话（含附件）。')
             .fontSize(12)
             .fontColor('#8A8A8A')
             .width('100%')
