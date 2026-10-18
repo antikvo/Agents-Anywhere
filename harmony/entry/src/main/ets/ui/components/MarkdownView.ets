@@ -17,6 +17,9 @@ export struct MarkdownView {
   @State showCodePreview: boolean = false;
   @State codePreviewText: string = '';
   @State codePreviewLanguage: string = '';
+  @State showImagePreview: boolean = false;
+  @State imagePreviewUrl: string = '';
+  @State failedImages: string[] = [];
 
   @Builder
   inlineView(text: string, fontSize: number, color: string) {
@@ -130,12 +133,32 @@ export struct MarkdownView {
       .margin({ top: 4, bottom: 4 })
     } else if (block.kind === MarkdownBlockKind.Image) {
       Column({ space: 4 }) {
-        Image(block.url ?? '')
+        if (this.failedImages.includes(block.url ?? '')) {
+          Row() {
+            Text('图片加载失败')
+              .fontSize(11)
+              .fontColor('#8A8A8A')
+          }
           .width('100%')
-          .constraintSize({ maxHeight: 220 })
-          .objectFit(ImageFit.Contain)
+          .height(80)
+          .justifyContent(FlexAlign.Center)
           .borderRadius(6)
           .backgroundColor('#F2F2F2')
+        } else {
+          Image(block.url ?? '')
+            .width('100%')
+            .constraintSize({ maxHeight: 220 })
+            .objectFit(ImageFit.Contain)
+            .borderRadius(6)
+            .backgroundColor('#F2F2F2')
+            .onError(() => {
+              this.failedImages = this.failedImages.concat([block.url ?? '']);
+            })
+            .onClick(() => {
+              this.imagePreviewUrl = block.url ?? '';
+              this.showImagePreview = true;
+            })
+        }
         if (block.text.length > 0) {
           Text(block.text)
             .fontSize(11)
@@ -165,6 +188,36 @@ export struct MarkdownView {
       }
       .width('100%')
       .alignItems(HorizontalAlign.Start)
+
+      if (this.showImagePreview) {
+        Column({ space: 10 }) {
+          Row({ space: 8 }) {
+            Text('图片')
+              .fontSize(15)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#000000')
+              .layoutWeight(1)
+            Text('关闭')
+              .fontSize(12)
+              .fontColor('#3A6FD8')
+              .onClick(() => {
+                this.showImagePreview = false;
+              })
+          }
+          .width('100%')
+          Image(this.imagePreviewUrl)
+            .width('100%')
+            .constraintSize({ maxHeight: 560 })
+            .objectFit(ImageFit.Contain)
+            .borderRadius(8)
+            .backgroundColor('#F2F2F2')
+        }
+        .width('90%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+        .shadow({ radius: 24, color: '#33000000' })
+      }
 
       if (this.showCodePreview) {
         Column({ space: 10 }) {
