@@ -6,7 +6,8 @@
 set -euo pipefail
 
 DEVECO_BASE="${DEVECO_BASE:-/Applications/DevEco-Studio.app/Contents}"
-export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-$DEVECO_BASE/sdk}"
+# 直接使用 DevEco Studio 自带 SDK；外部 DEVECO_SDK_HOME 可能与项目 target 不匹配。
+export DEVECO_SDK_HOME="$DEVECO_BASE/sdk"
 export NODE_HOME="${NODE_HOME:-$DEVECO_BASE/tools/node}"
 export PATH="$NODE_HOME/bin:$DEVECO_BASE/tools/ohpm/bin:$DEVECO_BASE/tools/hvigor/bin:$PATH"
 
