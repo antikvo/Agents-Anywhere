@@ -69,7 +69,9 @@ harmony/
 
 ## 深链
 
-- 打开会话：`agentsanywhere://session/<sessionId>`（`sessions` 亦可）。
+- 打开会话：`agentsanywhere://session/<sessionId>
+# 扫码登录：桌面端二维码内容（userId / loginToken / webUrl）
+agentsanywhere://session/mobile-login/<userId>/<loginToken>/<server>`（`sessions` 亦可）。
 - 也支持任意 URL 上的 `?sessionId=<sessionId>`。
 - 冷启动与热启动都会直接跳到会话详情：
 

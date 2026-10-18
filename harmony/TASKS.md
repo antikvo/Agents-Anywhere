@@ -14,7 +14,7 @@
 | 登录态存储（服务器地址 + token） | `android/feature/auth/AuthSessionStore.kt` | — | `feature/auth/AuthSessionStore.ets` | ✅ |
 | 账号密码登录 | `ios/API/APIClient.swift`、`server/api/auth.py` | `POST /auth/login`、`GET /auth/config`、`GET /health` | `api/AuthApi.ets`、`ui/screens/auth/LoginScreen.ets` | ✅ |
 | 退出登录（保留服务器地址） | `AuthSessionStore.kt` | — | `feature/auth/AuthController.ets` | ✅ |
-| 扫码登录（生成二维码 / 轮询 / 交换） | `android/ui/screens/auth/QrAuthScreens.kt` | `POST /auth/mobile-login/qr`、`/request`、`/status`、`/exchange` | `platform/ScanKit`、`feature/auth/QrLoginController.ets` | ⬜ |
+| 扫码登录（生成二维码 / 轮询 / 交换） | `android/ui/screens/auth/QrAuthScreens.kt` | `POST /auth/mobile-login/qr`、`/request`、`/status`、`/exchange` | `api/AuthApi.ets`、`feature/auth/AuthController.ets`、`ui/screens/auth/LoginScreen.ets`、`core/DeepLink.ets` | 🔄 扫码登录流程（桌面二维码内容经深链/手动 userId+token 填入 → request → 轮询 → exchange）已接并端到端验证；摄像头扫码未做 |
 | 注册与首位管理员（setup token） | `android/ui/screens/auth/AuthScreens.kt` | `POST /auth/register`、`GET /auth/config` | `ui/screens/auth/RegisterScreen.ets` | ⬜ |
 | OAuth 登录（PKCE + 深链回调） | `android/feature/auth/WebLoginViewModel.kt` | `GET /auth/oauth/start`、`/auth/oauth/callback`、`POST /auth/oauth/finalize` | `platform/OAuth`、`feature/auth/OAuthController.ets` | ⬜ |
 | token 加密存储（Asset Store Kit） | Android 明文 SharedPreferences（备份排除规则还写错）、iOS Keychain | — | `platform/SecureTokenStore.ets` | ⬜ |

@@ -3,8 +3,8 @@ import { emitter } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { AppContextHolder } from '../core/AppContextHolder';
-import { sessionIdFromUri } from '../core/DeepLink';
-import { setPendingSession } from '../platform/DeepLinkPrefs';
+import { mobileLoginFromUri, MobileLoginDeepLink, sessionIdFromUri } from '../core/DeepLink';
+import { setPendingMobileLogin, setPendingSession } from '../platform/DeepLinkPrefs';
 
 const DOMAIN = 0x0000;
 const TAG = 'AgentsAnywhere';
@@ -25,6 +25,14 @@ export default class EntryAbility extends UIAbility {
 
   private handleWant(want: Want): void {
     const uri: string = want.uri === undefined ? '' : want.uri;
+    hilog.info(DOMAIN, TAG, 'want uri: %{public}s', uri);
+    const mobileLogin: MobileLoginDeepLink | null = mobileLoginFromUri(uri);
+    if (mobileLogin !== null) {
+      setPendingMobileLogin(mobileLogin.userId, mobileLogin.loginToken, mobileLogin.server);
+      emitter.emit({ eventId: 1002 });
+      hilog.info(DOMAIN, TAG, 'mobile login deep link applied');
+      return;
+    }
     const sessionId: string = sessionIdFromUri(uri);
     if (sessionId.length > 0) {
       this.pendingSessionId = sessionId;

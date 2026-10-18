@@ -56,6 +56,10 @@
               {
                 "scheme": "agentsanywhere",
                 "host": "sessions"
+              },
+              {
+                "scheme": "agentsanywhere",
+                "host": "mobile-login"
               }
             ]
           }

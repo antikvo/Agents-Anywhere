@@ -1,4 +1,4 @@
-import { AuthApi } from '../../api/AuthApi';
+import { AuthApi, MobileLoginStatusResponse } from '../../api/AuthApi';
 import { AuthMeResponse } from '../../api/AuthDtos';
 import { normalizeServerOrigin } from '../../core/ServerUrl';
 import { AuthSession, AuthSessionStore } from './AuthSessionStore';
@@ -55,6 +55,46 @@ export class AuthController {
     await this.api.health(origin);
     const auth = await this.api.login(origin, email, password);
     return await this.store.save(origin, auth);
+  }
+
+  /**
+   * 扫码登录：桌面端生成二维码 → 手机解析出 userId/loginToken → 请求 → 轮询桌面确认 → 兑换 token。
+   * 摄像头扫码在平台层补齐前，登录页支持粘贴二维码内容。
+   */
+  async signInWithMobileLogin(serverUrl: string, userId: string, loginToken: string):
+    Promise<AuthSession> {
+    const origin: string | null = normalizeServerOrigin(serverUrl);
+    if (origin === null) {
+      throw new Error('请输入有效的服务器地址');
+    }
+    if (userId.length === 0 || loginToken.length === 0) {
+      throw new Error('二维码内容无效');
+    }
+    await this.api.health(origin);
+    await this.api.requestMobileLogin(origin, userId, loginToken, 'HarmonyOS 客户端');
+    for (let attempt = 0; attempt < 60; attempt++) {
+      await AuthController.delay(2000);
+      const status: MobileLoginStatusResponse = await this.api.mobileLoginStatus(origin, loginToken);
+      if (status.status === 'approved') {
+        const auth = await this.api.exchangeMobileLogin(origin, userId, loginToken);
+        return await this.store.save(origin, auth);
+      }
+      if (status.status === 'rejected') {
+        throw new Error('登录请求已被拒绝');
+      }
+      if (status.status === 'expired' || status.status === 'consumed') {
+        throw new Error('二维码已过期，请重新生成');
+      }
+    }
+    throw new Error('等待确认超时，请重新生成二维码');
+  }
+
+  private static async delay(ms: number): Promise<void> {
+    await new Promise<void>((resolve: () => void) => {
+      setTimeout(() => {
+        resolve();
+      }, ms);
+    });
   }
 
   async signOut(): Promise<void> {

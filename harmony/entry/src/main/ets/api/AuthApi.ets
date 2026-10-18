@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit';
+import { HTTP_METHOD_POST } from './HttpClient';
 import { apiUrl } from '../core/ServerUrl';
 import { ApiError, ApiErrorKind, HttpClient } from './HttpClient';
 import { AuthConfigResponse, AuthMeResponse, AuthResponse, HealthResponse } from './AuthDtos';
@@ -14,6 +15,35 @@ interface UpdateProfilePayload {
 
 interface ChangePasswordPayload {
   newPassword: string;
+}
+
+interface MobileLoginRequestPayload {
+  userId: string;
+  loginToken: string;
+  deviceName: string;
+}
+
+interface MobileLoginStatusPayload {
+  loginToken: string;
+}
+
+interface MobileLoginExchangePayload {
+  userId: string;
+  loginToken: string;
+}
+
+export interface MobileLoginStatusResponse {
+  status: string;
+  userId?: string | null;
+  deviceName?: string | null;
+  expiresAt?: string | null;
+}
+
+interface MobileLoginExchangeResponse {
+  auth: AuthResponse;
+  refreshToken: string;
+  expiresAt: string;
+  serverTime: string;
 }
 
 export class AuthApi {
@@ -63,6 +93,43 @@ export class AuthApi {
       token: token,
       body: JSON.stringify(payload)
     });
+  }
+
+  async requestMobileLogin(serverUrl: string, userId: string, loginToken: string,
+    deviceName: string): Promise<MobileLoginStatusResponse> {
+    const payload: MobileLoginRequestPayload = {
+      userId: userId,
+      loginToken: loginToken,
+      deviceName: deviceName
+    };
+    const text: string = await this.client.requestJson(
+      apiUrl(serverUrl, '/auth/mobile-login/request'), {
+        method: HTTP_METHOD_POST,
+        body: JSON.stringify(payload)
+      });
+    return JSON.parse(text) as MobileLoginStatusResponse;
+  }
+
+  async mobileLoginStatus(serverUrl: string, loginToken: string): Promise<MobileLoginStatusResponse> {
+    const payload: MobileLoginStatusPayload = { loginToken: loginToken };
+    const text: string = await this.client.requestJson(
+      apiUrl(serverUrl, '/auth/mobile-login/status'), {
+        method: HTTP_METHOD_POST,
+        body: JSON.stringify(payload)
+      });
+    return JSON.parse(text) as MobileLoginStatusResponse;
+  }
+
+  async exchangeMobileLogin(serverUrl: string, userId: string,
+    loginToken: string): Promise<AuthResponse> {
+    const payload: MobileLoginExchangePayload = { userId: userId, loginToken: loginToken };
+    const text: string = await this.client.requestJson(
+      apiUrl(serverUrl, '/auth/mobile-login/exchange'), {
+        method: HTTP_METHOD_POST,
+        body: JSON.stringify(payload)
+      });
+    const response: MobileLoginExchangeResponse = JSON.parse(text) as MobileLoginExchangeResponse;
+    return response.auth;
   }
 
   async me(serverUrl: string, token: string): Promise<AuthMeResponse> {
