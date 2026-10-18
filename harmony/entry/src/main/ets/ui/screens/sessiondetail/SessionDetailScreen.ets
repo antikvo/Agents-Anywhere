@@ -31,6 +31,9 @@ export struct SessionDetailScreen {
   };
   private controller: SessionDetailController = new SessionDetailController();
   @State title: string = '';
+  @State showTitleEdit: boolean = false;
+  @State titleDraft: string = '';
+  @State savingTitle: boolean = false;
   @State statusText: string = '';
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
@@ -87,6 +90,24 @@ export struct SessionDetailScreen {
     this.statusText = statusLabel(nextStatus);
     this.statusTint = statusColor(nextStatus);
     this.takeover = session.takeover;
+  }
+
+  private async saveTitle(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const initial: SessionItem | null = this.initial;
+    if (session === null || initial === null || this.savingTitle ||
+      this.titleDraft.trim().length === 0) {
+      return;
+    }
+    this.savingTitle = true;
+    try {
+      this.title = await this.controller.rename(session, initial.id, this.titleDraft.trim());
+      this.showTitleEdit = false;
+    } catch (error) {
+      this.errorMessage = (error as Error).message;
+    } finally {
+      this.savingTitle = false;
+    }
   }
 
   private async load(): Promise<void> {
@@ -655,6 +676,13 @@ export struct SessionDetailScreen {
               }
             },
             {
+              value: '重命名会话',
+              action: () => {
+                this.titleDraft = this.title;
+                this.showTitleEdit = true;
+              }
+            },
+            {
               value: '运行参数',
               action: () => {
                 this.openSettings();
@@ -861,6 +889,43 @@ export struct SessionDetailScreen {
             .onClick(() => {
               this.openSettings();
             })
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+      if (this.showTitleEdit) {
+        Column({ space: 10 }) {
+          Text('重命名会话')
+            .fontSize(16)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#000000')
+            .width('100%')
+          TextInput({ placeholder: '会话标题', text: this.titleDraft })
+            .height(40)
+            .fontSize(14)
+            .backgroundColor('#F5F5F5')
+            .borderRadius(8)
+            .onChange((value: string) => {
+              this.titleDraft = value;
+            })
+          Row({ space: 8 }) {
+            Button(this.savingTitle ? '保存中…' : '保存')
+              .height(34)
+              .enabled(!this.savingTitle && this.titleDraft.trim().length > 0)
+              .onClick(() => {
+                this.saveTitle();
+              })
+            Button('取消')
+              .height(34)
+              .backgroundColor('#F2F2F2')
+              .fontColor('#111111')
+              .onClick(() => {
+                this.showTitleEdit = false;
+              })
+          }
+          .width('100%')
         }
         .width('86%')
         .padding(16)

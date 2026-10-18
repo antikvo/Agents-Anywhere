@@ -127,6 +127,12 @@ export class SessionDetailController {
     };
   }
 
+  async rename(session: AuthSession, sessionId: string, title: string): Promise<string> {
+    const view: SessionView = await this.sessionsApi.patchMeta(session.serverUrl,
+      session.accessToken, sessionId, title, undefined, undefined);
+    return view.title === undefined || view.title === null ? title : view.title;
+  }
+
   async connect(): Promise<void> {
     const session: AuthSession | null = this.currentSession;
     const sessionId: string = this.currentSessionId;

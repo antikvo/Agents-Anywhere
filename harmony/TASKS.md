@@ -64,7 +64,7 @@
 | 审批（approval）卡片与处理 | `SessionMessages.kt`、`SessionInteractionCard`（iOS） | Runtime Notice：`GET /runtime/notices`、`POST /notices/{id}/respond`（approve / approve_for_session / reject / cancel） | `ui/screens/sessiondetail/SessionDetailScreen.ets`（noticeCard） | ✅ 卡片、错误通知与 respond 已接；真实 Runtime 错误通知已验证（success 路径待 runtime 可用） |
 | 输入请求（input_request）卡片与回复 | iOS `SessionInteractionCard.swift` | Runtime Notice：`interactionType=input_request`、`submit` | `ui/components/InputRequestCard.ets`、`model/InputRequest.ets` | ✅ uiSchema inputRequest v1 解析、单选/多选/自定义文本与 `answers` 提交；需在线 Runtime 端到端验证 |
 | Runtime 设置：模型、权限、审批策略、配置 | `SessionRuntimeSettingsSheet.kt`、`SessionRuntimeState.kt` | `GET /sessions/{id}/runtime/state`、`/capabilities`、`PATCH /runtime/selections` | 详情页「参数」浮层 | 🔄 状态/选择只读展示与离线降级已接；catalogs 在线时渲染与 selection 修改未做 |
-| 会话 meta：标题、已读、归档 | `SessionsApi.kt` | `GET/PATCH /sessions/{id}/meta`、`POST /sessions/read` | `feature/sessiondetail/` | 🔄 已读回执已在打开详情时上报；标题编辑未做 |
+| 会话 meta：标题、已读、归档 | `SessionsApi.kt` | `GET/PATCH /sessions/{id}/meta`、`POST /sessions/read` | `feature/sessiondetail/`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | ✅ 已读回执 + 详情「更多 → 重命名会话」已接并验证；批量已读未做 |
 | 会话内文件面板 | `SessionAgentFilesScreen.kt` | fs 端点 | `ui/screens/sessiondetail/SessionFilesScreen.ets` | ⬜ |
 | 本轮文件审阅（+A/−D 汇总、逐文件 diff） | `ios/Views/Chat/SessionTurnReviewSheet.swift` | timeline 变更数据 | `ui/screens/sessiondetail/TurnReviewSheet.ets` | ⬜ |
 | 会话详情 sheet（ID、workspace、状态、条目数、待回应交互） | `ios/Views/Chat/SessionDetailsSheet.swift` | 快照字段 | `ui/screens/sessiondetail/SessionDetailsSheet.ets` | ⬜ |
