@@ -142,7 +142,7 @@ curl -s "$BASE/connectors/$CID/runtimes/$RID/catalogs/permission" -H "Authorizat
 
 ## 单元测试
 
-`entry/src/ohosTest` 使用 `@ohos/hypium`，覆盖纯函数（版本比较、URL 规范化、VT 解析、Markdown）：
+`entry/src/ohosTest` 使用 `@ohos/hypium`，覆盖纯函数（版本比较、URL 规范化、VT 解析、Markdown、时间线映射、会话状态与分组）：
 
 ```bash
 cd harmony
@@ -154,7 +154,7 @@ hdc install -r entry/build/default/outputs/ohosTest/entry-ohosTest-unsigned.hap
 hdc shell aa test -b com.agentsanywhere.harmony -m entry_test -s unittest OpenHarmonyTestRunner -s timeout 60000
 ```
 
-当前 22 个用例全部通过；新增纯逻辑时优先补对应测试。
+当前 26 个用例全部通过；新增纯逻辑时优先补对应测试。
 
 ## 验证
 
