@@ -140,6 +140,10 @@ export class SessionDetailController {
     return view.title === undefined || view.title === null ? title : view.title;
   }
 
+  async syncSession(session: AuthSession, sessionId: string): Promise<void> {
+    await this.sessionsApi.syncSession(session.serverUrl, session.accessToken, sessionId);
+  }
+
   async createShare(session: AuthSession, sessionId: string): Promise<string> {
     const share: ShareCreateResponse = await this.sessionsApi.createSessionShare(session.serverUrl,
       session.accessToken, sessionId);

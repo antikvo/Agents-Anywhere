@@ -87,6 +87,15 @@ export class SessionsApi {
   /**
    * 标记已读。服务端要求 body 是裸 JSON 数组。
    */
+  async syncSession(serverUrl: string, token: string, sessionId: string): Promise<void> {
+    const path: string = `/sessions/${encodeURIComponent(sessionId)}/sync`;
+    await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      readTimeoutMs: 60000
+    });
+  }
+
   async createSessionShare(serverUrl: string, token: string, sessionId: string): Promise<ShareCreateResponse> {
     return await this.createShare(serverUrl, token, sessionId, 'session', []);
   }

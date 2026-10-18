@@ -110,6 +110,25 @@ export struct SessionDetailScreen {
     this.takeover = session.takeover;
   }
 
+  private async syncNow(): Promise<void> {
+    const session: AuthSession | null = this.session;
+    const initial: SessionItem | null = this.initial;
+    if (session === null || initial === null || this.actionBusy) {
+      return;
+    }
+    this.actionBusy = true;
+    this.actionError = '';
+    try {
+      await this.controller.syncSession(session, initial.id);
+      await this.controller.resyncTimeline();
+      promptAction.showToast({ message: '已重新同步' });
+    } catch (error) {
+      this.actionError = (error as Error).message;
+    } finally {
+      this.actionBusy = false;
+    }
+  }
+
   private async shareMessage(itemId: string): Promise<void> {
     const session: AuthSession | null = this.session;
     const initial: SessionItem | null = this.initial;
@@ -968,6 +987,12 @@ export struct SessionDetailScreen {
               value: '会话详情',
               action: () => {
                 this.showDetails = true;
+              }
+            },
+            {
+              value: '重新同步',
+              action: () => {
+                this.syncNow();
               }
             },
             {
