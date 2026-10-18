@@ -22,6 +22,7 @@ export struct TerminalScreen {
   @State busy: boolean = false;
   @State terminals: TerminalView[] = [];
   @State currentTerminalId: string = '';
+  @State scrollLabel: string = '';
 
   aboutToAppear(): void {
     this.controller.onUpdate = () => {
@@ -88,7 +89,7 @@ export struct TerminalScreen {
     const buffer = this.controller.buffer;
     const rows: TermSpan[][] = [];
     for (let r = 0; r < buffer.rows; r++) {
-      let spans: TermSpan[] = buffer.rowSpans(r);
+      let spans: TermSpan[] = buffer.visibleRowSpans(r);
       if (spans.length === 0) {
         spans = [{ text: ' ', fg: 7, bold: false }];
       }
@@ -137,7 +138,7 @@ export struct TerminalScreen {
             .fontSize(15)
             .fontWeight(FontWeight.Bold)
             .fontColor('#000000')
-          Text(`${this.statusText}${this.busy ? ' · 连接中' : ''}`)
+          Text(`${this.statusText}${this.busy ? ' · 连接中' : ''}${this.scrollLabel}`)
             .fontSize(10)
             .fontColor('#8A8A8A')
         }
@@ -195,6 +196,24 @@ export struct TerminalScreen {
           .enabled(!this.busy)
           .onClick(() => {
             this.createTerminal();
+          })
+        Button('上翻')
+          .height(26)
+          .fontSize(11)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.controller.buffer.scrollUp(10);
+            this.refresh();
+          })
+        Button('下翻')
+          .height(26)
+          .fontSize(11)
+          .backgroundColor('#F2F2F2')
+          .fontColor('#111111')
+          .onClick(() => {
+            this.controller.buffer.scrollDown(10);
+            this.refresh();
           })
         Blank()
         Button('重连')

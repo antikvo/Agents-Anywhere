@@ -13,6 +13,7 @@ export interface TermSpan {
 }
 
 const DEFAULT_FG: number = 7;
+const MAX_HISTORY_ROWS: number = 2000;
 
 function blankCell(): TermCell {
   return { ch: ' ', fg: DEFAULT_FG, bold: false };
@@ -34,6 +35,8 @@ export class TerminalBuffer {
   cols: number;
   rows: number;
   grid: TermCell[][];
+  history: TermCell[][] = [];
+  scrollOffset: number = 0;
   cursorRow: number = 0;
   cursorCol: number = 0;
   private fg: number = DEFAULT_FG;
@@ -74,10 +77,12 @@ export class TerminalBuffer {
       return;
     }
     const text: string = this.decoder.decodeToString(bytes);
+    this.scrollOffset = 0;
     this.feed(text);
   }
 
   applyText(text: string): void {
+    this.scrollOffset = 0;
     this.feed(text);
   }
 
@@ -88,11 +93,45 @@ export class TerminalBuffer {
     this.cursorRow = 0;
     this.cursorCol = 0;
     this.pending = '';
+    this.scrollOffset = 0;
+  }
+
+  scrollUp(lines: number): void {
+    const maxOffset: number = this.history.length;
+    this.scrollOffset = Math.min(maxOffset, this.scrollOffset + lines);
+  }
+
+  scrollDown(lines: number): void {
+    this.scrollOffset = Math.max(0, this.scrollOffset - lines);
+  }
+
+  scrollToBottom(): void {
+    this.scrollOffset = 0;
+  }
+
+  /**
+   * 可视行（0 = 顶部）。scrollOffset > 0 时显示历史缓冲。
+   */
+  visibleRowSpans(screenRow: number): TermSpan[] {
+    const historyCount: number = this.history.length;
+    const offset: number = Math.min(this.scrollOffset, historyCount);
+    const globalIndex: number = historyCount - offset + screenRow;
+    let cells: TermCell[];
+    if (globalIndex < historyCount) {
+      cells = this.history[globalIndex];
+    } else {
+      const gridIndex: number = globalIndex - historyCount;
+      cells = gridIndex >= 0 && gridIndex < this.rows ? this.grid[gridIndex] : blankRow(this.cols);
+    }
+    return this.spansOfRow(cells);
   }
 
   rowSpans(rowIndex: number): TermSpan[] {
+    return this.spansOfRow(this.grid[rowIndex]);
+  }
+
+  private spansOfRow(cells: TermCell[]): TermSpan[] {
     const spans: TermSpan[] = [];
-    const cells: TermCell[] = this.grid[rowIndex];
     let current: TermSpan | null = null;
     for (let c = 0; c < this.cols; c++) {
       const cell: TermCell = cells[c];
@@ -179,7 +218,13 @@ export class TerminalBuffer {
   private newline(): void {
     this.cursorRow++;
     if (this.cursorRow >= this.rows) {
-      this.grid.shift();
+      const shifted: TermCell[] | undefined = this.grid.shift();
+      if (shifted !== undefined) {
+        this.history.push(shifted);
+        if (this.history.length > MAX_HISTORY_ROWS) {
+          this.history.shift();
+        }
+      }
       this.grid.push(blankRow(this.cols));
       this.cursorRow = this.rows - 1;
     }
