@@ -55,10 +55,10 @@
 | 时间线事件渲染全集（用户/assistant/工具/系统/错误/审批/输入请求/git/notice） | `ui/screens/sessiondetail/SessionMessages.kt` | 事件协议 | `model/Timeline.ets`、`model/ProtocolMessages.ets`、`SessionDetailScreen.ets` | ✅ 用户/assistant/tool(command/mcp)/system/notice/问答/reasoning/marker/artifact 已在线验证；git 专项事件与 artifact 交互（打开文件）待补 |
 | 流式增量渲染与合并 | `SessionMessages.kt`、`SessionTimelineState.kt` | 事件协议 | `feature/sessiondetail/StreamingMerger.ets` | ⬜ |
 | Markdown 渲染（标题/嵌套列表/代码块/引用/行内强调/表格/图片） | `ui/screens/sessiondetail/AgentMarkdownText.kt`、`ios/Views/Chat/Markdown/*` | — | `ui/components/MarkdownView.ets` | ✅ 全部首版已接；代码块全屏预览与图片点击放大已在线验证；图片加载失败占位已实现（未构造失败场景） |
-| 代码块与 Diff 预览 | `CodeBlockPreview.kt`、`DiffPreviewParser.kt` | — | `ui/components/CodeBlockView.ets` | ⬜ |
+| 代码块与 Diff 预览 | `CodeBlockPreview.kt`、`DiffPreviewParser.kt` | — | `ui/components/MarkdownView.ets` | ✅ 代码块全屏预览已在线验证；diff 预览沿用 artifact 卡片，独立 diff 组件未做 |
 | 附件：图片查看、文件上传/下载、相机拍照 | `AttachmentImages.kt`、`SessionCameraCapture.kt`、`SessionAttachmentTransfer.kt` | `POST /sessions/{id}/attachments`、`GET .../attachments/{fileId}`（返回 contentBase64） | `ui/components/AttachmentImage.ets`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 图片查看 + multipart 上传（相册选图）已接；下载/相机/非图片预览未做 |
 | 输入框：文本、附件、命令建议、草稿持久化、发送 | `SessionComposer.kt`、`SessionComposerDraftStore.kt`、`SessionCameraCapture.kt` | `POST /sessions/{id}/runtime/messages`、`GET /connectors/{id}/runtimes/{rid}/commands` | `SessionDetailScreen.ets`、`platform/SessionDraftStore.ets`、`api/CommandsApi.ets` | 🔄 文本发送、相册附件上传、草稿持久化、`/` 命令建议、`+` 菜单「相册/拍照」已接；模拟器无相机，拍照成功路径待真机确认 |
-| 斜杠命令（catalog、前缀匹配、execute/selector、接管与状态门禁） | `ios/Models/Chat/RuntimeCommandModel.swift`、`CommandSuggestionPanel.swift` | `GET/POST /sessions/{id}/runtime/commands` | `feature/sessiondetail/CommandController.ets` | ⬜ |
+| 斜杠命令（catalog、前缀匹配、execute/selector、接管与状态门禁） | `ios/Models/Chat/RuntimeCommandModel.swift`、`CommandSuggestionPanel.swift` | `GET /connectors/{id}/runtimes/{rid}/commands` | `api/CommandsApi.ets`、`ui/screens/sessiondetail/SessionDetailScreen.ets` | 🔄 catalog 拉取 + `/` 前缀匹配 + 空降级已接并验证；命令 execute/selector 未做 |
 | 交互 Dock：审批/输入请求纵向翻页卡片与详情 | `ios/Views/Chat/SessionInteractionDock.swift`、`SessionInteractionCard.swift` | interaction/approval 端点 | `ui/screens/sessiondetail/InteractionDock.ets` | ⬜ |
 | 发送消息 / 打断 / 接管 | `SessionDetailController.kt`、`SessionRuntimeControls.kt` | runtime messages / interrupt / takeover | `feature/sessiondetail/` | 🔄 发送与接管已通；打断已接端点 |
 | 乐观消息与 `clientMessageId` 幂等 | `SessionOptimisticMessageStore.kt` | runtime messages | `feature/sessiondetail/OptimisticMessages.ets` | ⬜ |
@@ -68,11 +68,11 @@
 | 输入请求（input_request）卡片与回复 | iOS `SessionInteractionCard.swift` | Runtime Notice：`interactionType=input_request`、`submit` | `ui/components/InputRequestCard.ets`、`model/InputRequest.ets` | ✅ uiSchema inputRequest v1 解析、单选/多选/自定义文本与 `answers` 提交；需在线 Runtime 端到端验证 |
 | Runtime 设置：模型、权限、审批策略、配置 | `SessionRuntimeSettingsSheet.kt`、`SessionRuntimeState.kt` | `GET /sessions/{id}/runtime/state`、`/capabilities`、`PATCH /runtime/selections` | 详情页「参数」浮层 | 🔄 状态/选择只读展示与离线降级已接；catalogs 在线时渲染与 selection 修改未做 |
 | 会话 meta：标题、已读、归档 | `SessionsApi.kt` | `GET/PATCH /sessions/{id}/meta`、`POST /sessions/read` | `feature/sessiondetail/`、`ui/screens/sessiondetail/SessionDetailScreen.ets`、`SessionListScreen.ets` | ✅ 已读回执、详情重命名、列表「全部已读」均已接并验证 |
-| 会话内文件面板 | `SessionAgentFilesScreen.kt` | fs 端点 | `ui/screens/sessiondetail/SessionFilesScreen.ets` | ⬜ |
+| 会话内文件面板 | `SessionAgentFilesScreen.kt` | fs 端点 | `ui/screens/sessiondetail/SessionDetailScreen.ets`（复用 FilesScreen） | ✅ 详情「更多 → 文件」以会话 cwd 浏览已在线验证 |
 | 本轮文件审阅（+A/−D 汇总、逐文件 diff） | `ios/Views/Chat/SessionTurnReviewSheet.swift` | timeline 变更数据 | `ui/screens/sessiondetail/TurnReviewSheet.ets` | ⬜ |
-| 会话详情 sheet（ID、workspace、状态、条目数、待回应交互） | `ios/Views/Chat/SessionDetailsSheet.swift` | 快照字段 | `ui/screens/sessiondetail/SessionDetailsSheet.ets` | ⬜ |
+| 会话详情 sheet（ID、workspace、状态、条目数、待回应交互） | `ios/Views/Chat/SessionDetailsSheet.swift` | 快照字段 | `ui/screens/sessiondetail/SessionDetailScreen.ets` | ✅ 详情「更多 → 会话详情」展示 ID/工作区/状态/条目数/待回应/接管已在线验证 |
 | 会话时间线 JSON 导出（memory / remote 分页） | `ios/Business/V2SessionExportService.swift` | `GET /sessions/{id}/timeline?afterSeq=` | `feature/sessiondetail/SessionExport.ets` | ⬜ |
-| 会话分享链接 | `android/api/SessionsApi.kt`（`createSessionShare`） | `POST /sessions/{id}/shares` | `feature/sessiondetail/` | ⬜ |
+| 会话分享链接 | `android/api/SessionsApi.kt`（`createSessionShare`） | `POST /sessions/{id}/shares` | `api/SessionsApi.ets`、`SessionDetailScreen.ets` | ✅ 会话与单条回复分享均已在线验证 |
 | steer（运行中注入消息）与 sync（Connector 重同步） | `ios/Business/V2RuntimeInteractionService` | `POST /runtime/steer`、`POST /sessions/{id}/sync` | `feature/sessiondetail/` | ⬜ |
 | 离线缓存与冷启动恢复（会话列表/时间线落盘） | `ios/Repositories/V2LocalStore.swift`、`V2RestorationStore.swift` | — | `platform/`、`feature/sessiondetail/` | ⬜ |
 | 错误提示与重试 | `ChatErrorToasts.swift`、`ApiError` | — | `core/` | ⬜ |

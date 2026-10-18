@@ -48,6 +48,7 @@ export struct SessionDetailScreen {
   @State shareScopeLabel: string = '会话';
   @State commands: RuntimeCommand[] = [];
   @State commandsLoaded: boolean = false;
+  @State showDetails: boolean = false;
   @State statusText: string = '';
   @State statusTint: string = '#8A8A8A';
   @State rows: TimelineRow[] = [];
@@ -905,6 +906,12 @@ export struct SessionDetailScreen {
               }
             },
             {
+              value: '会话详情',
+              action: () => {
+                this.showDetails = true;
+              }
+            },
+            {
               value: '运行参数',
               action: () => {
                 this.openSettings();
@@ -1167,6 +1174,47 @@ export struct SessionDetailScreen {
         .borderRadius(12)
         .backgroundColor('#FFFFFF')
       }
+      if (this.showDetails) {
+        Column({ space: 8 }) {
+          Row({ space: 8 }) {
+            Text('会话详情')
+              .fontSize(16)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#000000')
+              .layoutWeight(1)
+            Text('关闭')
+              .fontSize(12)
+              .fontColor('#3A6FD8')
+              .onClick(() => {
+                this.showDetails = false;
+              })
+          }
+          .width('100%')
+          Text(`会话 ID：${this.initial !== null ? this.initial.id : ''}`)
+            .fontSize(11)
+            .fontColor('#5A5A5A')
+            .width('100%')
+            .copyOption(CopyOptions.LocalDevice)
+          Text(`工作区：${this.controller.currentCwd().length > 0 ? this.controller.currentCwd() : '未知'}`)
+            .fontSize(11)
+            .fontColor('#5A5A5A')
+            .width('100%')
+            .copyOption(CopyOptions.LocalDevice)
+          Text(`状态：${this.statusText.length > 0 ? this.statusText : '未知'} · 时间线条目：${this.rows.length}${this.hasMore ? '+' : ''}`)
+            .fontSize(11)
+            .fontColor('#5A5A5A')
+            .width('100%')
+          Text(`待回应：${this.notices.length} 条 · 已接管：${this.takeover ? '是' : '否'}`)
+            .fontSize(11)
+            .fontColor('#5A5A5A')
+            .width('100%')
+        }
+        .width('86%')
+        .padding(16)
+        .borderRadius(12)
+        .backgroundColor('#FFFFFF')
+      }
+
       if (this.showShare) {
         Column({ space: 10 }) {
           Text(`分享${this.shareScopeLabel}`)
