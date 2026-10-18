@@ -1,0 +1,75 @@
+import { http } from '@kit.NetworkKit';
+import { apiUrl } from '../core/ServerUrl';
+import { HttpClient, HTTP_METHOD_POST, HTTP_METHOD_PATCH, HTTP_METHOD_DELETE } from './HttpClient';
+import { ConnectorView, ConnectorsResponse } from './SessionDtos';
+
+export interface ConnectorCreateResponse {
+  connector: ConnectorView;
+  connectorToken: string;
+  tokenPrefix: string;
+}
+
+interface CreateConnectorRequest {
+  name: string;
+  connectorKind: string;
+}
+
+interface ConnectorResponse {
+  connector: ConnectorView;
+  serverTime?: string;
+}
+
+interface UpdateConnectorRequest {
+  name: string;
+}
+
+/**
+ * 设备（Connector）列表 API，对齐 Android api/DevicesApi.kt 的列表部分。
+ */
+export class DevicesApi {
+  private readonly client: HttpClient;
+
+  constructor(client: HttpClient = new HttpClient()) {
+    this.client = client;
+  }
+
+  async listConnectors(serverUrl: string, token: string): Promise<ConnectorsResponse> {
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, '/connectors'), { token: token });
+    return JSON.parse(text) as ConnectorsResponse;
+  }
+
+  /**
+   * 创建 Connector 并返回一次性 token；客户端展示启动命令，token 只出现这一次。
+   */
+  async updateConnector(serverUrl: string, token: string, connectorId: string,
+    name: string): Promise<ConnectorView> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}`;
+    const body: UpdateConnectorRequest = { name: name };
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_PATCH,
+      token: token,
+      body: JSON.stringify(body)
+    });
+    const response: ConnectorResponse = JSON.parse(text) as ConnectorResponse;
+    return response.connector;
+  }
+
+  async deleteConnector(serverUrl: string, token: string, connectorId: string): Promise<void> {
+    const path: string = `/connectors/${encodeURIComponent(connectorId)}`;
+    await this.client.requestJson(apiUrl(serverUrl, path), {
+      method: HTTP_METHOD_DELETE,
+      token: token
+    });
+  }
+
+  async createConnector(serverUrl: string, token: string,
+    name: string): Promise<ConnectorCreateResponse> {
+    const body: CreateConnectorRequest = { name: name, connectorKind: 'cli' };
+    const text: string = await this.client.requestJson(apiUrl(serverUrl, '/connectors'), {
+      method: HTTP_METHOD_POST,
+      token: token,
+      body: JSON.stringify(body)
+    });
+    return JSON.parse(text) as ConnectorCreateResponse;
+  }
+}

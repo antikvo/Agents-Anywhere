@@ -10,7 +10,7 @@ Agents Anywhere 的产品版本使用 `MAJOR.MINOR.PATCH`，三段各有明确�
 
 ## PATCH：各端独立发布
 
-- Desktop、Android、iOS、Web、Server、Connector、DSH 插件可以各自发布 PATCH 版本，不需要同时发版。例如 Android 发布 `2.0.1` 时，Desktop 可以仍是 `2.0.0`。
+- Desktop、Android、iOS、HarmonyOS、Web、Server、Connector、DSH 插件可以各自发布 PATCH 版本，不需要同时发版。例如 Android 发布 `2.0.1` 时，Desktop 可以仍是 `2.0.0`。
 - 同一 `2.0` 线上不同端的 PATCH 号不对齐，也不代表功能相同或需要同步升级。
 - 只有 PATCH 允许不同；各端的 `MAJOR.MINOR` 必须保持一致。
 - PATCH 不能新增、删除或改变其他端依赖的字段、事件、端点或协议语义。如果一个“单端修复”需要另一端配合修改，就说明它是接口更新，应当升 MINOR。
@@ -56,6 +56,7 @@ Agents Anywhere 的产品版本使用 `MAJOR.MINOR.PATCH`，三段各有明确�
 | Desktop | `desktop-workbench/package.json`、`desktop-workbench/renderer/package.json` | `version` |
 | Android | `android/app/build.gradle.kts` | `versionName`、`versionCode` |
 | iOS | `ios/Agents Anywhere/Agents Anywhere.xcodeproj/project.pbxproj` | `MARKETING_VERSION` |
+| HarmonyOS | `harmony/AppScope/app.json5` | `versionName`、`versionCode`（开发中，随首个发布进入版本同步） |
 | Web | `web-next/package.json` | `version`（`src/lib/demo-api.ts` 中的演示版本号也要同步） |
 | Connector | `connector/pyproject.toml` | `version` |
 | DSH 插件 | `dsh-bridge-next/package.json` | `version` |

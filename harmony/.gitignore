@@ -1,0 +1,12 @@
+local.properties
+.hvigor/
+oh_modules/
+**/build/
+**/.preview/
+*.hap
+*.app
+*.p7b
+*.p12
+*.cer
+*.pem
+.DS_Store
