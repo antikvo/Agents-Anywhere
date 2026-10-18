@@ -1,7 +1,7 @@
 import { AuthSession } from '../../../feature/auth/AuthSessionStore';
 import { SessionsController, SessionsLoadResult } from '../../../feature/sessions/SessionsController';
 import { DashboardRealtimeController } from '../../../feature/sessions/DashboardRealtimeController';
-import { groupSessions, SessionGroup, SessionItem, statusColor } from '../../../model/Session';
+import { groupSessions, SessionGroup, SessionItem, SessionStatusKind, statusColor } from '../../../model/Session';
 import { Notifications } from '../../../platform/Notifications';
 import { AnnouncementsApi, PublicAnnouncement } from '../../../api/AnnouncementsApi';
 import { CacheStore } from '../../../platform/CacheStore';
@@ -51,6 +51,7 @@ export struct SessionListScreen {
   @State markingRead: boolean = false;
   @State refreshing: boolean = false;
   @State cacheLabel: string = '';
+  @State statusFilter: string = 'all';
   @State announcementMarkdown: string = '';
   @State announcementAt: string = '';
   @State announcementDismissed: boolean = false;
@@ -100,6 +101,12 @@ export struct SessionListScreen {
     const keyword: string = this.query.trim().toLowerCase();
     this.allSessions.forEach((item: SessionItem) => {
       if (item.archived !== this.archived) {
+        return;
+      }
+      if (this.statusFilter === 'approval' && item.statusKind !== SessionStatusKind.WaitingApproval) {
+        return;
+      }
+      if (this.statusFilter === 'error' && item.statusKind !== SessionStatusKind.Error) {
         return;
       }
       if (keyword.length === 0) {
@@ -501,6 +508,39 @@ export struct SessionListScreen {
         .layoutWeight(1)
         .width('100%')
       } else {
+      Row({ space: 6 }) {
+        Button('全部')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor(this.statusFilter === 'all' ? '#000000' : '#F2F2F2')
+          .fontColor(this.statusFilter === 'all' ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.statusFilter = 'all';
+            this.applyFilter();
+          })
+        Button('待审批')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor(this.statusFilter === 'approval' ? '#000000' : '#F2F2F2')
+          .fontColor(this.statusFilter === 'approval' ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.statusFilter = 'approval';
+            this.applyFilter();
+          })
+        Button('错误')
+          .height(24)
+          .fontSize(10)
+          .backgroundColor(this.statusFilter === 'error' ? '#000000' : '#F2F2F2')
+          .fontColor(this.statusFilter === 'error' ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.statusFilter = 'error';
+            this.applyFilter();
+          })
+        Blank()
+      }
+      .width('100%')
+      .padding({ left: 16, right: 16, bottom: 6 })
+
       TextInput({ placeholder: '搜索会话', text: this.query })
         .height(40)
         .fontSize(14)

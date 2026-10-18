@@ -33,7 +33,7 @@
 | Dashboard 实时快照（列表/设备在线状态） | `feature/realtime/DashboardRealtimeController.kt` | `POST /ws-ticket`（dashboard scope）、`WS /dashboard/ws` | `feature/sessions/DashboardRealtimeController.ets` | ✅ 已接；服务端推送已验证（改标题后 push 新快照） |
 | 会话状态指示（运行/待审批/错误/未读） | `feature/sessions/SessionListIndicator.kt` | 实时事件 | `model/Session.ets` | ✅ 状态点/未读点已接 |
 | 分组与排序（设备 / 项目 / 最近） | `feature/sessions/SidebarSelectors.kt` | `GET /projects` | `model/Session.ets`（groupSessions） | ✅ 项目优先、其余按设备分组；最近/自定义排序未做 |
-| 筛选：Active / Archived / 待审批 / 错误 | `feature/sessions/ArchivedSessionsState.kt` | `GET /sessions?archived=` | `ui/screens/home/SessionFilterBar.ets` | ⬜ |
+| 筛选：Active / Archived / 待审批 / 错误 | `feature/sessions/ArchivedSessionsState.kt` | `GET /sessions?archived=` | `ui/screens/home/SessionListScreen.ets` | ✅ 全部/待审批/错误筛选已接并在线验证 |
 | 搜索：标题 / 工作区 / Runtime / 设备 | `ui/screens/home/HomeLists.kt` | 本地过滤（已加载页范围） | `ui/screens/home/SessionListScreen.ets` | ✅ 已接本地搜索；服务端搜索待确认 |
 | 项目列表与项目操作（新建/改名/归档/删除） | `feature/sessions/WorkspaceProjects.kt`、`ui/screens/home/HomeProjectMenus.kt` | `GET/POST/PATCH/DELETE /projects` | `api/ProjectsApi.ets`、`ui/screens/projects/ProjectsScreen.ets` | ✅ 列表/新建/改名/删除/批量归档会话已接并验证 |
 | 新建会话完整流程（设备→Runtime→工作区→模型/权限→首条消息） | `ui/screens/home/NewSession*.kt`（12 个文件） | `POST /sessions/create-and-start`、runtime catalog | `ui/screens/home/NewSessionScreen.ets`、`api/NewSessionApi.ets` | ✅ 设备/Runtime/项目/模型/工作区/首条消息 → 创建并进入详情，已在线验证；权限（permission）选择与失败对账 `knownSessionIds` 未做 |
